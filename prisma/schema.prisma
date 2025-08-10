@@ -1,0 +1,1060 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  emailVerified Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  restaurants   Restaurant[]
+  staff         Staff?
+  auditLogs     AuditLog[]
+  
+  @@map("users")
+}
+
+model Restaurant {
+  id            String   @id @default(cuid())
+  name          String
+  address       String
+  phone         String
+  email         String
+  gstNumber     String?
+  description   String?
+  businessType  BusinessType @default(RESTAURANT)
+  isActive      Boolean  @default(true)
+  isVerified    Boolean  @default(false)
+  ownerId       String
+  tradeName     String?
+  logo          String?
+  website       String?
+  fssaiNumber   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  owner         User           @relation(fields: [ownerId], references: [id])
+  outlets       Outlet[]
+  menuItems     MenuItem[]
+  categories    Category[]
+  orders        Order[]
+  customers     Customer[]
+  staff         Staff[]
+  tables        Table[]
+  inventory     InventoryItem[]
+  subscription  Subscription?
+  auditLogs     AuditLog[]
+  businessSettings BusinessSettings?
+  aiSuggestions AISuggestion[]
+  discountRules DiscountRule[]
+  salesForecasts SalesForecast[]
+  inventoryAlerts InventoryAlert[]
+  loyaltyRewards LoyaltyReward[]
+  customerInsights CustomerInsight[]
+  roles         Role[]
+  invoiceTemplates InvoiceTemplate[]
+  customerNotifications CustomerNotification[]
+  notificationTemplates NotificationTemplate[]
+  locations     Location[]
+  posLayouts    POSLayout[]
+  
+  @@map("restaurants")
+}
+
+model Outlet {
+  id           String   @id @default(cuid())
+  name         String
+  address      String
+  phone        String
+  isActive     Boolean  @default(true)
+  restaurantId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  orders     Order[]
+  tables     Table[]
+  staff      Staff[]
+  inventory  InventoryItem[]
+  
+  @@map("outlets")
+}
+
+model Subscription {
+  id            String      @id @default(cuid())
+  plan          SubscriptionPlan
+  status        SubscriptionStatus
+  startDate     DateTime
+  endDate       DateTime
+  trialEndsAt   DateTime?
+  lastBillingAt DateTime?
+  nextBillingAt DateTime?
+  amount        Float
+  restaurantId  String      @unique
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  // Relations
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  
+  @@map("subscriptions")
+}
+
+model Staff {
+  id            String      @id @default(cuid())
+  name          String
+  email         String      @unique
+  phone         String
+  role          StaffRole
+  password      String
+  passwordHash  String?
+  isActive      Boolean     @default(true)
+  isVerified    Boolean     @default(false)
+  lastLoginAt   DateTime?
+  userId        String?     @unique
+  restaurantId  String
+  outletId      String?
+  roleId        String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  // Relations
+  user          User?       @relation(fields: [userId], references: [id])
+  restaurant    Restaurant  @relation(fields: [restaurantId], references: [id])
+  outlet        Outlet?     @relation(fields: [outletId], references: [id])
+  assignedRole  Role?       @relation(fields: [roleId], references: [id])
+  managedLocations Location[]
+  orders        Order[]
+  auditLogs     AuditLog[]
+  
+  @@map("staff")
+}
+
+model Role {
+  id            String      @id @default(cuid())
+  name          String
+  description   String?
+  level         RoleLevel
+  isSystem      Boolean     @default(false)
+  isActive      Boolean     @default(true)
+  restaurantId  String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  // Relations
+  restaurant    Restaurant?  @relation(fields: [restaurantId], references: [id])
+  staff         Staff[]
+  rolePermissions RolePermission[]
+  
+  @@unique([name, restaurantId])
+  @@map("roles")
+}
+
+model Permission {
+  id            String      @id @default(cuid())
+  name          String      @unique
+  description   String?
+  module        Module
+  action        PermissionAction
+  resource      String?
+  isSystem      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  // Relations
+  rolePermissions RolePermission[]
+  
+  @@map("permissions")
+}
+
+model RolePermission {
+  id            String      @id @default(cuid())
+  roleId        String
+  permissionId  String
+  createdAt     DateTime    @default(now())
+  
+  // Relations
+  role          Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission    Permission  @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Category {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  restaurantId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  restaurant Restaurant  @relation(fields: [restaurantId], references: [id])
+  menuItems MenuItem[]
+  
+  @@map("categories")
+}
+
+model MenuItem {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  price        Float
+  categoryId   String
+  restaurantId String
+  isActive     Boolean  @default(true)
+  isAvailable  Boolean  @default(true)
+  imageUrl     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  restaurant  Restaurant   @relation(fields: [restaurantId], references: [id])
+  category    Category     @relation(fields: [categoryId], references: [id])
+  orderItems  OrderItem[]
+  inventory   InventoryItem[]
+  
+  @@map("menu_items")
+}
+
+model Customer {
+  id           String   @id @default(cuid())
+  name         String
+  email        String?  @unique
+  phone        String
+  address      String?
+  city         String?
+  state        String?
+  pincode      String?
+  latitude     Float?
+  longitude    Float?
+  preferredLocationId String?
+  loyaltyPoints Int     @default(0)
+  restaurantId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  orders     Order[]
+  aiSuggestions AISuggestion[]
+  loyaltyRewards LoyaltyReward[]
+  customerInsights CustomerInsight[]
+  customerNotifications CustomerNotification[]
+  preferredLocation Location? @relation(fields: [preferredLocationId], references: [id])
+  userLocations UserLocation[]
+  
+  @@map("customers")
+}
+
+model Table {
+  id           String      @id @default(cuid())
+  number       Int
+  capacity     Int
+  status       TableStatus @default(AVAILABLE)
+  restaurantId String
+  outletId     String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  
+  // Relations
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  outlet     Outlet?    @relation(fields: [outletId], references: [id])
+  orders     Order[]
+  
+  @@unique([number, restaurantId, outletId])
+  @@map("tables")
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  orderType     OrderType
+  status        OrderStatus @default(PENDING)
+  customer      Customer?   @relation(fields: [customerId], references: [id])
+  customerId    String?
+  table         Table?      @relation(fields: [tableId], references: [id])
+  tableId       String?
+  staff         Staff       @relation(fields: [staffId], references: [id])
+  staffId       String
+  restaurantId  String
+  outletId      String?
+  locationId    String?
+  subtotal      Float
+  gstAmount     Float
+  totalAmount   Float
+  discount      Float       @default(0)
+  notes         String?
+  isPaid        Boolean     @default(false)
+  appointmentDate DateTime?
+  serviceType   String?
+  customFields  String?     // JSON string for business-specific fields
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  // Relations
+  restaurant    Restaurant   @relation(fields: [restaurantId], references: [id])
+  outlet        Outlet?      @relation(fields: [outletId], references: [id])
+  location      Location?    @relation(fields: [locationId], references: [id])
+  orderItems    OrderItem[]
+  payments      Payment[]
+  kotItems      KOTItem[]
+  auditLogs     AuditLog[]
+  
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  menuItemId String
+  quantity   Int
+  price      Float
+  notes      String?
+  createdAt  DateTime @default(now())
+  
+  // Relations
+  order    Order    @relation(fields: [orderId], references: [id])
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+  kotItems KOTItem[]
+  
+  @@map("order_items")
+}
+
+model KOTItem {
+  id         String   @id @default(cuid())
+  orderItemId String
+  orderId    String
+  status     KOTStatus @default(PENDING)
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  // Relations
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id])
+  order     Order     @relation(fields: [orderId], references: [id])
+  
+  @@map("kot_items")
+}
+
+model Payment {
+  id             String       @id @default(cuid())
+  orderId        String
+  amount         Float
+  method         PaymentMethod
+  status         PaymentStatus @default(PENDING)
+  transactionId  String?
+  referenceId    String?
+  gatewayResponse String?
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  
+  // Relations
+  order          Order         @relation(fields: [orderId], references: [id])
+  auditLogs      AuditLog[]
+  
+  @@map("payments")
+}
+
+model AuditLog {
+  id             String        @id @default(cuid())
+  action         AuditAction
+  entityType     String
+  entityId       String
+  changes        String?
+  oldValues      String?
+  newValues      String?
+  userId         String?
+  staffId        String?
+  restaurantId   String
+  orderId        String?
+  paymentId      String?
+  ipAddress      String?
+  userAgent      String?
+  securityLevel  SecurityLevel @default(MEDIUM)
+  createdAt      DateTime      @default(now())
+  
+  // Relations
+  user           User?         @relation(fields: [userId], references: [id])
+  staff          Staff?        @relation(fields: [staffId], references: [id])
+  restaurant     Restaurant    @relation(fields: [restaurantId], references: [id])
+  order          Order?        @relation(fields: [orderId], references: [id])
+  payment        Payment?      @relation(fields: [paymentId], references: [id])
+  
+  @@map("audit_logs")
+}
+
+model InventoryItem {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  quantity     Float
+  unit         String
+  minStock     Float
+  maxStock     Float
+  cost         Float
+  restaurantId String
+  outletId     String?
+  locationId   String?
+  menuItemId   String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  outlet     Outlet?    @relation(fields: [outletId], references: [id])
+  location   Location?  @relation(fields: [locationId], references: [id])
+  menuItem   MenuItem?  @relation(fields: [menuItemId], references: [id])
+  inventoryAlerts InventoryAlert[]
+  
+  @@map("inventory_items")
+}
+
+model BusinessSettings {
+  id                    String   @id @default(cuid())
+  restaurantId          String   @unique
+  businessType          BusinessType
+  enableGST             Boolean  @default(true)
+  gstRate               Float    @default(0.05)
+  enableInventory       Boolean  @default(true)
+  enableTables          Boolean  @default(true)
+  enableAppointments    Boolean  @default(false)
+  enableServices        Boolean  @default(false)
+  enableSubscriptions   Boolean  @default(false)
+  enableLoyalty         Boolean  @default(true)
+  enableDelivery        Boolean  @default(true)
+  enableAI              Boolean  @default(true)
+  currency              String   @default("INR")
+  timezone              String   @default("Asia/Kolkata")
+  logo                  String?  // URL to business logo
+  receiptHeader         String?
+  receiptFooter         String?
+  invoiceSettings       String?  // JSON string for invoice customizations
+  customFields          String?  // JSON string for custom fields
+  businessHours         String?  // JSON string for business hours
+  features              String?  // JSON string for enabled features
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  restaurant            Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  
+  @@map("business_settings")
+}
+
+model AISuggestion {
+  id                    String   @id @default(cuid())
+  restaurantId          String
+  customerId            String?
+  type                  AISuggestionType
+  title                 String
+  description           String
+  data                  String?  // JSON string for suggestion data
+  confidence            Float    @default(0.0)
+  isAccepted            Boolean  @default(false)
+  isDismissed           Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  restaurant            Restaurant @relation(fields: [restaurantId], references: [id])
+  customer              Customer?  @relation(fields: [customerId], references: [id])
+  
+  @@map("ai_suggestions")
+}
+
+model DiscountRule {
+  id                    String   @id @default(cuid())
+  restaurantId          String
+  name                  String
+  description           String?
+  type                  DiscountType
+  value                 Float
+  conditions            String?  // JSON string for discount conditions
+  targetCustomers       String?  // JSON string for customer targeting
+  minPurchaseAmount     Float?
+  maxDiscountAmount     Float?
+  usageLimit            Int?
+  usedCount             Int      @default(0)
+  isActive              Boolean  @default(true)
+  startDate             DateTime?
+  endDate               DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  restaurant            Restaurant @relation(fields: [restaurantId], references: [id])
+  
+  @@map("discount_rules")
+}
+
+model SalesForecast {
+  id                    String   @id @default(cuid())
+  restaurantId          String
+  forecastDate          DateTime
+  predictedRevenue       Float
+  predictedOrders       Int
+  confidence            Float
+  factors               String?  // JSON string for forecast factors
+  actualRevenue         Float?
+  actualOrders          Int?
+  accuracy              Float?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  restaurant            Restaurant @relation(fields: [restaurantId], references: [id])
+  
+  @@unique([restaurantId, forecastDate])
+  @@map("sales_forecasts")
+}
+
+model InventoryAlert {
+  id                    String   @id @default(cuid())
+  restaurantId          String
+  inventoryItemId       String
+  type                  AlertType
+  severity              AlertSeverity
+  message               String
+  currentQuantity       Float
+  threshold             Float
+  predictedDays         Int?     // Predicted days until stockout
+  recommendation        String?
+  isResolved            Boolean  @default(false)
+  resolvedAt            DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  restaurant            Restaurant    @relation(fields: [restaurantId], references: [id])
+  inventoryItem         InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  
+  @@map("inventory_alerts")
+}
+
+model LoyaltyReward {
+  id                    String   @id @default(cuid())
+  restaurantId          String
+  customerId            String
+  type                  RewardType
+  name                  String
+  description           String?
+  pointsRequired        Int
+  value                 Float
+  conditions            String?  // JSON string for reward conditions
+  isRedeemed            Boolean  @default(false)
+  redeemedAt            DateTime?
+  expiresAt             DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  restaurant            Restaurant @relation(fields: [restaurantId], references: [id])
+  customer              Customer   @relation(fields: [customerId], references: [id])
+  
+  @@map("loyalty_rewards")
+}
+
+model CustomerInsight {
+  id                    String   @id @default(cuid())
+  restaurantId          String
+  customerId            String
+  totalOrders           Int      @default(0)
+  totalSpent            Float    @default(0.0)
+  avgOrderValue         Float    @default(0.0)
+  favoriteItems         String?  // JSON string for favorite items
+  visitFrequency        Float    @default(0.0)
+  lastVisit             DateTime?
+  predictedNextVisit    DateTime?
+  loyaltyScore          Float    @default(0.0)
+  churnRisk             Float    @default(0.0)
+  preferences           String?  // JSON string for customer preferences
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  restaurant            Restaurant @relation(fields: [restaurantId], references: [id])
+  customer              Customer   @relation(fields: [customerId], references: [id])
+  
+  @@unique([restaurantId, customerId])
+  @@map("customer_insights")
+}
+
+model CustomerNotification {
+  id                    String   @id @default(cuid())
+  restaurantId          String
+  customerId            String?
+  templateId            String?
+  type                  NotificationType
+  channel               NotificationChannel
+  title                 String
+  message               String
+  status                NotificationStatus @default(PENDING)
+  scheduledFor           DateTime?
+  sentAt                DateTime?
+  errorMessage          String?
+  metadata              String?  // JSON string for additional metadata
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  restaurant            Restaurant @relation(fields: [restaurantId], references: [id])
+  customer              Customer?  @relation(fields: [customerId], references: [id])
+  template              NotificationTemplate? @relation(fields: [templateId], references: [id])
+  
+  @@map("customer_notifications")
+}
+
+model NotificationTemplate {
+  id                    String   @id @default(cuid())
+  restaurantId          String
+  name                  String
+  type                  NotificationType
+  channel               NotificationChannel
+  subject               String?
+  message               String
+  variables             String?  // JSON string for template variables
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  restaurant            Restaurant @relation(fields: [restaurantId], references: [id])
+  customerNotifications CustomerNotification[]
+  
+  @@unique([restaurantId, name])
+  @@map("notification_templates")
+}
+
+model InvoiceTemplate {
+  id                    String   @id @default(cuid())
+  restaurantId          String
+  name                  String
+  template              String   // Template type: default, modern, classic, minimal
+  isDefault             Boolean  @default(false)
+  customizations        String?  // JSON string for template customizations
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  restaurant            Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  
+  @@unique([restaurantId, name])
+  @@map("invoice_templates")
+}
+
+// Enums
+enum NotificationType {
+  PROMOTIONAL
+  TRANSACTIONAL
+  REMINDER
+  ALERT
+}
+
+enum NotificationChannel {
+  SMS
+  EMAIL
+  WHATSAPP
+  PUSH
+}
+
+enum NotificationStatus {
+  PENDING
+  SENDING
+  SENT
+  FAILED
+  SCHEDULED
+}
+
+enum SubscriptionPlan {
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  TRIAL
+}
+
+enum StaffRole {
+  OWNER
+  MANAGER
+  CASHIER
+  WAITER
+  CHEF
+  KITCHEN_STAFF
+  BARBER
+  BEAUTICIAN
+  PHARMACIST
+  SALES_ASSOCIATE
+  STORE_MANAGER
+  HOTEL_STAFF
+}
+
+enum BusinessType {
+  RESTAURANT
+  RETAIL_STORE
+  CAFE
+  HOTEL
+  BAR
+  ECOMMERCE
+  SALON
+  SPA
+  PHARMACY
+  GROCERY_STORE
+  FOOD_TRUCK
+  GYM
+  CLINIC
+}
+
+enum OrderType {
+  DINE_IN
+  TAKEAWAY
+  DELIVERY
+  IN_STORE
+  ONLINE
+  APPOINTMENT
+  SERVICE
+  SUBSCRIPTION
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  MAINTENANCE
+}
+
+enum KOTStatus {
+  PENDING
+  PREPARING
+  READY
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  UPI
+  CARD
+  NET_BANKING
+  WALLET
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  PAYMENT
+  ORDER_STATUS_CHANGE
+  SUBSCRIPTION_CHANGE
+  SETTINGS_CHANGE
+}
+
+enum SecurityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AISuggestionType {
+  PRODUCT_SUGGESTION
+  DISCOUNT_OFFER
+  UPSELL
+  CROSS_SELL
+  REORDER_REMINDER
+  PERSONALIZED_OFFER
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  BUY_X_GET_Y
+  FREE_SHIPPING
+  LOYALTY_POINTS
+}
+
+enum AlertType {
+  LOW_STOCK
+  STOCKOUT
+  OVERSTOCK
+  EXPIRY_WARNING
+  REORDER_REMINDER
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RewardType {
+  DISCOUNT
+  FREE_ITEM
+  POINTS_BONUS
+  CASHBACK
+  FREE_SHIPPING
+}
+
+enum RoleLevel {
+  SUPER_ADMIN
+  STORE_ADMIN
+  STORE_STAFF
+}
+
+enum Module {
+  DASHBOARD
+  ORDERS
+  MENU
+  INVENTORY
+  CUSTOMERS
+  STAFF
+  REPORTS
+  SETTINGS
+  PAYMENTS
+  TABLES
+  OUTLETS
+  SUBSCRIPTIONS
+  AUDIT_LOGS
+  AI_SUGGESTIONS
+  DISCOUNTS
+  LOYALTY
+  POS_CUSTOMIZATION
+}
+
+enum PermissionAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  MANAGE
+  APPROVE
+  REJECT
+  EXPORT
+  IMPORT
+}
+
+// Location-based models
+model Location {
+  id              String            @id @default(cuid())
+  name            String
+  address         String
+  city            String
+  state           String
+  pincode         String
+  country         String            @default("India")
+  phone           String?
+  email           String?
+  latitude        Float?
+  longitude       Float?
+  type            LocationType      @default(RESTAURANT)
+  status          LocationStatus    @default(ACTIVE)
+  capacity        Int               @default(0)
+  gstNumber       String?
+  openingHours    String?           // JSON string for opening hours
+  deliveryRadius  Float?            // in kilometers
+  minOrderAmount  Float?            // minimum order amount for delivery
+  deliveryFee     Float?            // delivery fee
+  isDeliveryEnabled Boolean          @default(true)
+  isPickupEnabled Boolean           @default(true)
+  isActive        Boolean           @default(true)
+  restaurantId    String
+  managerId       String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  // Relations
+  restaurant      Restaurant         @relation(fields: [restaurantId], references: [id])
+  manager         Staff?             @relation(fields: [managerId], references: [id])
+  orders          Order[]
+  inventory       InventoryItem[]
+  locationOffers  LocationOffer[]
+  deliveryZones   DeliveryZone[]
+  locationStats   LocationStat[]
+  userLocations   UserLocation[]
+  preferredCustomers Customer[]
+  
+  @@map("locations")
+}
+
+model LocationOffer {
+  id              String            @id @default(cuid())
+  locationId      String
+  title           String
+  description     String?
+  type            OfferType
+  value           Float
+  conditions      String?           // JSON string for offer conditions
+  minOrderAmount  Float?
+  maxDiscountAmount Float?
+  usageLimit      Int?
+  usedCount       Int               @default(0)
+  targetCustomers String?           // JSON string for customer targeting
+  isActive        Boolean           @default(true)
+  startDate       DateTime?
+  endDate         DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  // Relations
+  location        Location           @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  
+  @@map("location_offers")
+}
+
+model DeliveryZone {
+  id              String            @id @default(cuid())
+  locationId      String
+  name            String
+  pincode         String
+  area            String
+  city            String
+  state           String
+  deliveryFee     Float
+  estimatedTime   Int               // in minutes
+  minOrderAmount  Float?
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  // Relations
+  location        Location           @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  
+  @@unique([locationId, pincode])
+  @@map("delivery_zones")
+}
+
+model LocationStat {
+  id              String            @id @default(cuid())
+  locationId      String
+  date            DateTime
+  todayRevenue    Float             @default(0)
+  todayOrders     Int               @default(0)
+  todayCustomers  Int               @default(0)
+  weeklyRevenue   Float             @default(0)
+  weeklyOrders    Int               @default(0)
+  monthlyRevenue  Float             @default(0)
+  monthlyOrders   Int               @default(0)
+  staffCount      Int               @default(0)
+  tableOccupancy  Float             @default(0)
+  deliveryOrders  Int               @default(0)
+  pickupOrders    Int               @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  // Relations
+  location        Location           @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  
+  @@unique([locationId, date])
+  @@map("location_stats")
+}
+
+model UserLocation {
+  id              String            @id @default(cuid())
+  userId          String?
+  customerId      String?
+  locationId      String?
+  ipAddress       String?
+  latitude        Float?
+  longitude       Float?
+  accuracy        Float?            // in meters
+  city            String?
+  state           String?
+  pincode         String?
+  country         String?
+  detectedAt      DateTime          @default(now())
+  createdAt       DateTime          @default(now())
+  
+  // Relations
+  customer        Customer?         @relation(fields: [customerId], references: [id])
+  location        Location?         @relation(fields: [locationId], references: [id])
+  
+  @@map("user_locations")
+}
+
+// Enums for location-based features
+enum LocationType {
+  RESTAURANT
+  CLOUD_KITCHEN
+  FOOD_TRUCK
+  KIOSK
+  OUTLET
+}
+
+enum LocationStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+  TEMPORARILY_CLOSED
+}
+
+enum OfferType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_DELIVERY
+  BUY_ONE_GET_ONE
+  COMBO_OFFER
+}
+
+model POSLayout {
+  id            String   @id @default(cuid())
+  name          String
+  businessType  String
+  fields        String   // JSON string for field configuration
+  isActive      Boolean  @default(true)
+  restaurantId  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  restaurant    Restaurant? @relation(fields: [restaurantId], references: [id])
+  
+  @@map("pos_layouts")
+}
