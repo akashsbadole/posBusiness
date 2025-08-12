@@ -1122,7 +1122,7 @@ export default function POSDashboard() {
         {isCreateOrderOpen && (
           <CompactOrderDialog
             open={isCreateOrderOpen}
-            onClose={() => setIsCreateOrderOpen(false)}
+            onOpenChange={setIsCreateOrderOpen}
             restaurantId={selectedRestaurant}
           />
         )}
