@@ -5,6 +5,7 @@ A comprehensive, enterprise-grade Point of Sale (POS) system specifically design
 ## 🌟 Complete Feature Set
 
 ### 📦 Inventory Management
+
 - **Real-time Stock Tracking**: Monitor inventory levels across all locations in real-time
 - **Low Stock Alerts**: Automated notifications when stock reaches minimum thresholds
 - **Inventory Reporting**: Generate comprehensive reports on stock levels, movements, and product popularity
@@ -15,6 +16,7 @@ A comprehensive, enterprise-grade Point of Sale (POS) system specifically design
 - **Waste Tracking**: Monitor and reduce food waste with detailed tracking
 
 ### 📋 Order Management
+
 - **Complete Order Tracking**: Track orders from placement to fulfillment with real-time status updates
 - **Order Status Updates**: Real-time status changes (Pending → Confirmed → Preparing → Ready → Delivered)
 - **Order Cancellation**: Allow customers and staff to cancel orders with proper reason tracking
@@ -25,6 +27,7 @@ A comprehensive, enterprise-grade Point of Sale (POS) system specifically design
 - **Order Analytics**: Detailed order performance metrics and insights
 
 ### 💳 Payment Processing
+
 - **Multi-Payment Options**: Support for Cash, Credit/Debit Cards, UPI, Digital Wallets, and Bank Transfers
 - **Payment Gateway Integration**: Seamless integration with Razorpay, PhonePe, Stripe, PayPal, and more
 - **Payment Tokenization**: Secure storage of payment information for repeat customers
@@ -35,6 +38,7 @@ A comprehensive, enterprise-grade Point of Sale (POS) system specifically design
 - **Failed Payment Handling**: Robust error handling and retry mechanisms
 
 ### 👥 Customer Management
+
 - **Customer Profiles**: Comprehensive customer database with contact information and purchase history
 - **Loyalty Programs**: Multi-tiered loyalty programs with points, rewards, and benefits
 - **Customer Notifications**: Multi-channel notifications (Email, SMS, WhatsApp, Push) for promotions and updates
@@ -45,6 +49,7 @@ A comprehensive, enterprise-grade Point of Sale (POS) system specifically design
 - **Feedback Management**: Collect and analyze customer feedback
 
 ### 📊 Reporting and Analytics
+
 - **Sales Reporting**: Comprehensive sales reports with revenue, profit margins, and growth trends
 - **Customer Reporting**: Detailed customer analytics including lifetime value, visit frequency, and preferences
 - **Inventory Reporting**: Complete inventory reports including stock levels, turnover rates, and wastage
@@ -55,6 +60,7 @@ A comprehensive, enterprise-grade Point of Sale (POS) system specifically design
 - **Export Capabilities**: Export reports in multiple formats (PDF, Excel, CSV)
 
 ### 🔒 Security and Compliance
+
 - **Data Encryption**: End-to-end encryption for sensitive data including payment information
 - **Access Control**: Role-based access control (RBAC) with granular permissions
 - **GST Compliance**: Complete GST compliance with CGST/SGST calculation and reporting
@@ -65,6 +71,7 @@ A comprehensive, enterprise-grade Point of Sale (POS) system specifically design
 - **Security Monitoring**: Real-time security monitoring and alerting
 
 ### 🔌 Integration Capabilities
+
 - **E-commerce Integration**: Seamless integration with Shopify, WooCommerce, and custom e-commerce platforms
 - **Accounting Integration**: Integration with QuickBooks, Xero, and other accounting software
 - **Third-party Services**: Integration with delivery providers, payment gateways, and marketing tools
@@ -75,6 +82,7 @@ A comprehensive, enterprise-grade Point of Sale (POS) system specifically design
 - **Data Sync**: Real-time data synchronization across systems
 
 ### 📱 Mobile POS Features
+
 - **Mobile App**: Native mobile apps for iOS and Android with full POS functionality
 - **Tablet Support**: Optimized for tablet devices with touch-friendly interface
 - **Offline Mode**: Complete offline functionality with automatic syncing when online
@@ -87,12 +95,14 @@ A comprehensive, enterprise-grade Point of Sale (POS) system specifically design
 ## 🚀 Deployment Guide
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm or yarn
 - Git
 - SQLite (for development) or PostgreSQL/MySQL (for production)
 
 ### Automated Deployment
+
 ```bash
 # Clone the repository
 git clone <repository-url>
@@ -105,6 +115,7 @@ cd indian-restaurant-pos
 ### Manual Deployment
 
 #### 1. Environment Setup
+
 ```bash
 # Install dependencies
 npm install
@@ -119,6 +130,7 @@ DATABASE_URL="file:./dev.db"
 ```
 
 #### 2. Database Setup
+
 ```bash
 # Generate Prisma client
 npm run db:generate
@@ -131,6 +143,7 @@ npm run db:seed
 ```
 
 #### 3. Development Server
+
 ```bash
 # Start development server
 npm run dev
@@ -140,9 +153,36 @@ npm run dev
 # Database Studio: npx prisma studio
 ```
 
+Available credentials:
+Owner: owner@spicegarden.com / owner123
+Manager: manager@spicegarden.com / manager123
+Cashier: cashier@spicegarden.com / cashier123
+Kitchen: kitchen@spicegarden.com / kitchen123
+Waiter: waiter@spicegarden.com / waiter123
+Demo: demo@restaurant.com / demo123
+
+🌱 Seeding demo accounts for login page...
+Created POSBiz Demo restaurant with all demo accounts
+Created categories and menu items for POSBiz Demo
+Created sample tables for POSBiz Demo
+Demo accounts seeded successfully!
+
+Available demo credentials:
+Super Admin: admin@posbiz.com / admin123
+Restaurant Manager: manager@restaurant.com / manager123
+Staff Member: staff@restaurant.com / staff123
+Demo Account: demo@posbiz.com / demo123
+
+//use starting data
+// "db:seed-update-business": "tsx scripts/update-to-business.ts",
+// "db:seed-all-business": "tsx prisma/seed-all-business-types.ts",
+// "db:seed-all-comprehensive": "tsx prisma/seed-comprehensive.ts",
+// "db:seed-fix-staff": "tsx prisma/seed-fix-staff.ts"
+
 #### 4. Production Deployment
 
 ##### Build the Application
+
 ```bash
 # Build for production
 npm run build
@@ -152,6 +192,7 @@ npm start
 ```
 
 ##### Docker Deployment
+
 ```bash
 # Build Docker image
 docker build -t restaurant-pos .
@@ -161,8 +202,9 @@ docker run -p 3000:3000 restaurant-pos
 ```
 
 ##### Docker Compose (Recommended for Production)
+
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   app:
     build: .
@@ -173,7 +215,7 @@ services:
       - DATABASE_URL=postgresql://user:password@db:5432/restaurant_pos
     depends_on:
       - db
-  
+
   db:
     image: postgres:15
     environment:
@@ -190,6 +232,7 @@ volumes:
 ##### Cloud Deployment
 
 ###### AWS ECS
+
 ```bash
 # Build and push to ECR
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123456789012.dkr.ecr.us-east-1.amazonaws.com
@@ -199,6 +242,7 @@ docker push 123456789012.dkr.ecr.us-east-1.amazonaws.com/restaurant-pos:latest
 ```
 
 ###### Google Cloud Run
+
 ```bash
 # Build and deploy
 gcloud builds submit --tag gcr.io/PROJECT-ID/restaurant-pos
@@ -206,6 +250,7 @@ gcloud run deploy --image gcr.io/PROJECT-ID/restaurant-pos --platform managed
 ```
 
 ###### Vercel (Recommended for Next.js)
+
 ```bash
 # Install Vercel CLI
 npm i -g vercel
@@ -220,6 +265,7 @@ vercel --prod
 ### Configuration
 
 #### Environment Variables
+
 ```bash
 # Application
 NEXTAUTH_URL=https://your-domain.com
@@ -251,6 +297,7 @@ ZOMATO_API_KEY=your_zomato_key
 ```
 
 #### Database Configuration
+
 ```javascript
 // prisma/schema.prisma
 datasource db {
@@ -260,36 +307,38 @@ datasource db {
 ```
 
 #### Security Configuration
+
 ```javascript
 // next.config.js
 module.exports = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: "/(.*)",
         headers: [
           {
-            key: 'X-Frame-Options',
-            value: 'DENY',
+            key: "X-Frame-Options",
+            value: "DENY",
           },
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
+            key: "X-Content-Type-Options",
+            value: "nosniff",
           },
           {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
+            key: "Referrer-Policy",
+            value: "origin-when-cross-origin",
           },
         ],
       },
-    ]
+    ];
   },
-}
+};
 ```
 
 ### Monitoring and Maintenance
 
 #### Health Checks
+
 ```bash
 # Application health check
 curl http://localhost:3000/api/health
@@ -299,21 +348,23 @@ npm run db:health
 ```
 
 #### Logging
+
 ```javascript
 // Configure logging in production
-const winston = require('winston');
+const winston = require("winston");
 
 const logger = winston.createLogger({
-  level: 'info',
+  level: "info",
   format: winston.format.json(),
   transports: [
-    new winston.transports.File({ filename: 'error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'combined.log' }),
+    new winston.transports.File({ filename: "error.log", level: "error" }),
+    new winston.transports.File({ filename: "combined.log" }),
   ],
 });
 ```
 
 #### Backup Strategy
+
 ```bash
 # Database backup
 pg_dump restaurant_pos > backup_$(date +%Y%m%d).sql
@@ -323,6 +374,7 @@ pg_dump restaurant_pos > backup_$(date +%Y%m%d).sql
 ```
 
 #### Performance Monitoring
+
 ```bash
 # Install monitoring dependencies
 npm install @vercel/otel
@@ -334,6 +386,7 @@ const { NodeSDK } = require('@vercel/otel');
 ## 🛠 Technical Architecture
 
 ### Frontend Stack
+
 - **Next.js 15** with App Router for optimal performance
 - **TypeScript 5** for type safety and better development experience
 - **Tailwind CSS 4** for utility-first styling
@@ -345,6 +398,7 @@ const { NodeSDK } = require('@vercel/otel');
 - **Zod** for schema validation
 
 ### Backend Stack
+
 - **Next.js API Routes** for serverless API endpoints
 - **Prisma ORM** with type-safe database access
 - **NextAuth.js** for authentication and session management
@@ -356,12 +410,14 @@ const { NodeSDK } = require('@vercel/otel');
 - **twilio** for SMS notifications
 
 ### Database
+
 - **SQLite** for development (file-based, easy setup)
 - **PostgreSQL** recommended for production (scalable, reliable)
 - **MySQL** alternative for production
 - **Redis** for caching and session storage (optional)
 
 ### Infrastructure
+
 - **Docker** for containerization
 - **Docker Compose** for local development
 - **Nginx** for reverse proxy and load balancing
@@ -371,6 +427,7 @@ const { NodeSDK } = require('@vercel/otel');
 ## 📊 Database Schema Overview
 
 ### Core Models
+
 - **Restaurant**: Main restaurant entity with configuration
 - **Outlet**: Multi-location support
 - **User**: System users and authentication
@@ -385,6 +442,7 @@ const { NodeSDK } = require('@vercel/otel');
 - **Table**: Restaurant table management
 
 ### Advanced Models
+
 - **Subscription**: Subscription plan management
 - **Role**: Role-based access control
 - **Permission**: Granular permission system
@@ -398,6 +456,7 @@ const { NodeSDK } = require('@vercel/otel');
 ## 💳 Subscription Plans
 
 ### Starter Plan - ₹1,999/month
+
 - Up to 2 outlets
 - Basic inventory management
 - Order management
@@ -407,6 +466,7 @@ const { NodeSDK } = require('@vercel/otel');
 - Mobile app access
 
 ### Professional Plan - ₹4,999/month
+
 - Up to 5 outlets
 - Advanced inventory with forecasting
 - Complete order management
@@ -417,6 +477,7 @@ const { NodeSDK } = require('@vercel/otel');
 - API access
 
 ### Enterprise Plan - Custom Pricing
+
 - Unlimited outlets
 - All Professional features
 - Custom integrations
@@ -429,6 +490,7 @@ const { NodeSDK } = require('@vercel/otel');
 ## 🇮🇳 Indian-Specific Features
 
 ### GST Compliance
+
 - **Automatic Tax Calculation**: CGST/SGST/IGST based on location
 - **GST Invoicing**: GST-compliant invoice generation
 - **HSN Codes**: Support for HSN/SAC codes
@@ -437,6 +499,7 @@ const { NodeSDK } = require('@vercel/otel');
 - **GST Registration**: Track GST registration details
 
 ### Payment Integration
+
 - **UPI Integration**: Support for all major UPI apps
 - **QR Code Payments**: Generate and scan UPI QR codes
 - **Net Banking**: Integration with major Indian banks
@@ -445,6 +508,7 @@ const { NodeSDK } = require('@vercel/otel');
 - **Cash Management**: Cash handling and reconciliation
 
 ### Regional Features
+
 - **Multi-language Support**: English, Hindi, Tamil, Telugu, Kannada, Bengali
 - **Regional Cuisines**: Support for various Indian food categories
 - **Festival Features**: Festival-specific promotions and menus
@@ -454,6 +518,7 @@ const { NodeSDK } = require('@vercel/otel');
 ## 📚 Documentation and Support
 
 ### Documentation
+
 - [API Documentation](./docs/api.md)
 - [Deployment Guide](./docs/deployment.md)
 - [User Manual](./docs/user-manual.md)
@@ -461,6 +526,7 @@ const { NodeSDK } = require('@vercel/otel');
 - [Developer Guide](./docs/developer-guide.md)
 
 ### Support Channels
+
 - **Email Support**: support@restaurantpos.com
 - **Phone Support**: +91 22 1234 5678 (Enterprise only)
 - **Live Chat**: Available on web dashboard
@@ -468,6 +534,7 @@ const { NodeSDK } = require('@vercel/otel');
 - **Video Tutorials**: Step-by-step video guides
 
 ### Community
+
 - **User Forum**: community.restaurantpos.com
 - **GitHub Discussions**: github.com/restaurantpos/discussions
 - **Slack Community**: Join our Slack workspace
@@ -476,6 +543,7 @@ const { NodeSDK } = require('@vercel/otel');
 ## 🔧 Development Commands
 
 ### Development
+
 ```bash
 # Start development server
 npm run dev
@@ -494,6 +562,7 @@ npm run test:watch
 ```
 
 ### Database
+
 ```bash
 # Generate Prisma client
 npm run db:generate
@@ -515,6 +584,7 @@ npm run db:reset -- --force
 ```
 
 ### Production
+
 ```bash
 # Build application
 npm run build
@@ -527,6 +597,7 @@ npm run build:analyze
 ```
 
 ### Docker
+
 ```bash
 # Build Docker image
 docker build -t restaurant-pos .
@@ -546,6 +617,7 @@ docker-compose down
 ### Common Issues and Solutions
 
 #### Port Already in Use
+
 ```bash
 # Find and kill process using port 3000
 lsof -ti:3000 | xargs kill -9
@@ -555,6 +627,7 @@ npx kill-port 3000
 ```
 
 #### Database Connection Issues
+
 ```bash
 # Check database status
 npm run db:health
@@ -567,6 +640,7 @@ npm run db:reset
 ```
 
 #### Build Errors
+
 ```bash
 # Clean build
 rm -rf .next
@@ -579,6 +653,7 @@ npm run build:clean
 ```
 
 #### Memory Issues
+
 ```bash
 # Increase Node.js memory limit
 NODE_OPTIONS="--max-old-space-size=4096" npm run dev
@@ -588,6 +663,7 @@ npm run analyze:bundle
 ```
 
 #### Performance Issues
+
 ```bash
 # Analyze bundle size
 npm run analyze
@@ -604,6 +680,7 @@ npm run generate:sitemap
 We welcome contributions! Please see our contributing guidelines:
 
 ### Development Workflow
+
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
 3. Make your changes and add tests
@@ -612,6 +689,7 @@ We welcome contributions! Please see our contributing guidelines:
 6. Open a Pull Request
 
 ### Code Standards
+
 - Follow TypeScript best practices
 - Use ESLint configuration
 - Write comprehensive tests
@@ -619,6 +697,7 @@ We welcome contributions! Please see our contributing guidelines:
 - Follow semantic versioning
 
 ### Testing
+
 ```bash
 # Run all tests
 npm test
@@ -640,6 +719,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🎯 Roadmap
 
 ### Upcoming Features
+
 - **AI-powered Menu Optimization**: Intelligent menu suggestions based on sales data
 - **Advanced CRM**: Enhanced customer relationship management features
 - **Mobile Kitchen Display**: Kitchen display system for mobile devices
@@ -650,6 +730,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Integration Marketplace**: App store for third-party integrations
 
 ### Performance Improvements
+
 - **Caching Layer**: Redis caching for improved performance
 - **Database Optimization**: Query optimization and indexing
 - **Frontend Optimization**: Lazy loading and code splitting
@@ -667,4 +748,4 @@ For support, questions, or feedback:
 
 ---
 
-*Transform your restaurant business with our comprehensive, scalable, and user-friendly POS system designed specifically for the Indian market.*
+_Transform your restaurant business with our comprehensive, scalable, and user-friendly POS system designed specifically for the Indian market._

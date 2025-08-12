@@ -14,7 +14,10 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed-roles": "tsx src/lib/seed-roles.ts",
     "db:setup": "prisma db push && prisma db seed",
-    "db:seed-dummy": "tsx scripts/seed-dummy-users.ts"
+    "db:seed-dummy": "tsx scripts/seed-dummy-users.ts",
+    "db:seed-demo-accounts": "tsx prisma/seed-demo-accounts.ts",
+    "db:seed-demo-fix": "tsx prisma/fix-demo-accounts.ts",
+    "db:seed-simple": "tsx src/lib/seed-simple.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

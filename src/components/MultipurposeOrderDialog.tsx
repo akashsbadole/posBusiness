@@ -1,22 +1,33 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Textarea } from '@/components/ui/textarea'
-import { DateTimePicker } from '@/components/ui/datetime-picker'
-import { 
-  Plus, 
-  Minus, 
-  Trash2, 
-  Printer, 
-  CreditCard, 
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { DateTimePicker } from "@/components/ui/datetime-picker";
+import {
+  Plus,
+  Minus,
+  Trash2,
+  Printer,
+  CreditCard,
   Smartphone,
   Banknote,
   Search,
@@ -30,14 +41,23 @@ import {
   Scissors,
   Dumbbell,
   Pill,
-  Stethoscope
-} from 'lucide-react'
-import { usePOSStore } from '@/store'
-import { useCategories, useMenuItems, useTables, useCustomers, useCreateOrder, useCreateCustomer, useCreatePayment, useBusinessSettings } from '@/hooks'
+  Stethoscope,
+} from "lucide-react";
+import { usePOSStore } from "@/store";
+import {
+  useCategories,
+  useMenuItems,
+  useTables,
+  useCustomers,
+  useCreateOrder,
+  useCreateCustomer,
+  useCreatePayment,
+  useBusinessSettings,
+} from "@/hooks";
 
 interface MultipurposeOrderDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 const businessTypeIcons = {
@@ -53,41 +73,45 @@ const businessTypeIcons = {
   GROCERY_STORE: Package,
   FOOD_TRUCK: Package,
   GYM: Dumbbell,
-  CLINIC: Stethoscope
-}
+  CLINIC: Stethoscope,
+};
 
 const businessTypeOrderTypes = {
-  RESTAURANT: ['DINE_IN', 'TAKEAWAY', 'DELIVERY'],
-  RETAIL_STORE: ['IN_STORE'],
-  CAFE: ['IN_STORE', 'TAKEAWAY'],
-  HOTEL: ['DINE_IN', 'ROOM_SERVICE', 'DELIVERY'],
-  BAR: ['DINE_IN', 'TAB'],
-  ECOMMERCE: ['ONLINE', 'DELIVERY'],
-  SALON: ['APPOINTMENT', 'SERVICE'],
-  SPA: ['APPOINTMENT', 'SERVICE', 'SUBSCRIPTION'],
-  PHARMACY: ['IN_STORE', 'PRESCRIPTION'],
-  GROCERY_STORE: ['IN_STORE', 'ONLINE', 'DELIVERY'],
-  FOOD_TRUCK: ['IN_STORE', 'TAKEAWAY'],
-  GYM: ['SUBSCRIPTION', 'APPOINTMENT'],
-  CLINIC: ['APPOINTMENT', 'SERVICE']
-}
+  RESTAURANT: ["DINE_IN", "TAKEAWAY", "DELIVERY"],
+  RETAIL_STORE: ["IN_STORE"],
+  CAFE: ["IN_STORE", "TAKEAWAY"],
+  HOTEL: ["DINE_IN", "ROOM_SERVICE", "DELIVERY"],
+  BAR: ["DINE_IN", "TAB"],
+  ECOMMERCE: ["ONLINE", "DELIVERY"],
+  SALON: ["APPOINTMENT", "SERVICE"],
+  SPA: ["APPOINTMENT", "SERVICE", "SUBSCRIPTION"],
+  PHARMACY: ["IN_STORE", "PRESCRIPTION"],
+  GROCERY_STORE: ["IN_STORE", "ONLINE", "DELIVERY"],
+  FOOD_TRUCK: ["IN_STORE", "TAKEAWAY"],
+  GYM: ["SUBSCRIPTION", "APPOINTMENT"],
+  CLINIC: ["APPOINTMENT", "SERVICE"],
+};
 
-export default function MultipurposeOrderDialog({ open, onOpenChange }: MultipurposeOrderDialogProps) {
-  const [orderType, setOrderType] = useState<string>('')
-  const [selectedTable, setSelectedTable] = useState<string>('')
-  const [selectedCustomer, setSelectedCustomer] = useState<string>('')
-  const [newCustomerName, setNewCustomerName] = useState<string>('')
-  const [newCustomerPhone, setNewCustomerPhone] = useState<string>('')
-  const [showAddCustomer, setShowAddCustomer] = useState<boolean>(false)
-  const [notes, setNotes] = useState<string>('')
-  const [searchTerm, setSearchTerm] = useState<string>('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [paymentMethod, setPaymentMethod] = useState<string>('')
-  const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false)
-  const [showPaymentDialog, setShowPaymentDialog] = useState<boolean>(false)
-  const [appointmentDate, setAppointmentDate] = useState<Date>(new Date())
-  const [serviceType, setServiceType] = useState<string>('')
-  const [customFields, setCustomFields] = useState<Record<string, string>>({})
+export default function MultipurposeOrderDialog({
+  open,
+  onOpenChange,
+}: MultipurposeOrderDialogProps) {
+  const [orderType, setOrderType] = useState<string>("");
+  const [selectedTable, setSelectedTable] = useState<string>("");
+  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
+  const [newCustomerName, setNewCustomerName] = useState<string>("");
+  const [newCustomerPhone, setNewCustomerPhone] = useState<string>("");
+  const [showAddCustomer, setShowAddCustomer] = useState<boolean>(false);
+  const [notes, setNotes] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [paymentMethod, setPaymentMethod] = useState<string>("");
+  const [isProcessingPayment, setIsProcessingPayment] =
+    useState<boolean>(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState<boolean>(false);
+  const [appointmentDate, setAppointmentDate] = useState<Date>(new Date());
+  const [serviceType, setServiceType] = useState<string>("");
+  const [customFields, setCustomFields] = useState<Record<string, string>>({});
 
   const {
     cart,
@@ -97,154 +121,164 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
     clearCart,
     getCartTotal,
     setError,
-    clearError
-  } = usePOSStore()
+    clearError,
+  } = usePOSStore();
 
-  const selectedRestaurant = 'cme2cx36c0002x5haddxsxhtg' // Demo restaurant ID
+  const selectedRestaurant = "cme2cx36c0002x5haddxsxhtg"; // Demo restaurant ID
 
-  const { data: categoriesData } = useCategories(selectedRestaurant)
-  const { data: menuItemsData } = useMenuItems(selectedRestaurant)
-  const { data: tablesData } = useTables(selectedRestaurant)
-  const { data: customersData } = useCustomers(selectedRestaurant)
-  const { data: businessSettings } = useBusinessSettings(selectedRestaurant)
-  const createOrderMutation = useCreateOrder()
-  const createCustomerMutation = useCreateCustomer()
-  const createPaymentMutation = useCreatePayment()
+  const { data: categoriesData } = useCategories(selectedRestaurant);
+  const { data: menuItemsData } = useMenuItems(selectedRestaurant);
+  const { data: tablesData } = useTables(selectedRestaurant);
+  const { data: customersData } = useCustomers(selectedRestaurant);
+  const { data: businessSettings } = useBusinessSettings(selectedRestaurant);
+  const createOrderMutation = useCreateOrder();
+  const createCustomerMutation = useCreateCustomer();
+  const createPaymentMutation = useCreatePayment();
 
-  const BusinessIcon = businessSettings?.businessType ? 
-    businessTypeIcons[businessSettings.businessType as keyof typeof businessTypeIcons] : 
-    Package
+  const BusinessIcon = businessSettings?.businessType
+    ? businessTypeIcons[
+        businessSettings.businessType as keyof typeof businessTypeIcons
+      ]
+    : Package;
 
   // Filter menu items based on search and category
-  const filteredMenuItems = menuItemsData?.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === 'all' || item.categoryId === selectedCategory
-    return matchesSearch && matchesCategory
-  }) || []
+  const filteredMenuItems =
+    menuItemsData?.filter((item) => {
+      const matchesSearch =
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory =
+        selectedCategory === "all" || item.categoryId === selectedCategory;
+      return matchesSearch && matchesCategory;
+    }) || [];
 
   // Set default order type based on business type
   useEffect(() => {
     if (businessSettings?.businessType && !orderType) {
-      const availableTypes = businessTypeOrderTypes[businessSettings.businessType as keyof typeof businessTypeOrderTypes]
+      const availableTypes =
+        businessTypeOrderTypes[
+          businessSettings.businessType as keyof typeof businessTypeOrderTypes
+        ];
       if (availableTypes && availableTypes.length > 0) {
-        setOrderType(availableTypes[0])
+        setOrderType(availableTypes[0]);
       }
     }
-  }, [businessSettings, orderType])
+  }, [businessSettings, orderType]);
 
   // Initialize custom fields based on business type
   useEffect(() => {
     if (businessSettings?.businessType) {
-      const fields: Record<string, string> = {}
+      const fields: Record<string, string> = {};
       switch (businessSettings.businessType) {
-        case 'RESTAURANT':
-          fields.tableNumber = ''
-          fields.specialInstructions = ''
-          break
-        case 'RETAIL_STORE':
-          fields.sku = ''
-          fields.barcode = ''
-          break
-        case 'SALON':
-          fields.stylist = ''
-          fields.serviceDuration = '30'
-          break
-        case 'SPA':
-          fields.therapist = ''
-          fields.treatmentType = ''
-          break
-        case 'PHARMACY':
-          fields.prescriptionNumber = ''
-          fields.doctorName = ''
-          break
-        case 'GYM':
-          fields.trainer = ''
-          fields.membershipType = ''
-          break
-        case 'CLINIC':
-          fields.doctor = ''
-          fields.symptoms = ''
-          break
+        case "RESTAURANT":
+          fields.tableNumber = "";
+          fields.specialInstructions = "";
+          break;
+        case "RETAIL_STORE":
+          fields.sku = "";
+          fields.barcode = "";
+          break;
+        case "SALON":
+          fields.stylist = "";
+          fields.serviceDuration = "30";
+          break;
+        case "SPA":
+          fields.therapist = "";
+          fields.treatmentType = "";
+          break;
+        case "PHARMACY":
+          fields.prescriptionNumber = "";
+          fields.doctorName = "";
+          break;
+        case "GYM":
+          fields.trainer = "";
+          fields.membershipType = "";
+          break;
+        case "CLINIC":
+          fields.doctor = "";
+          fields.symptoms = "";
+          break;
       }
-      setCustomFields(fields)
+      setCustomFields(fields);
     }
-  }, [businessSettings])
+  }, [businessSettings]);
 
   // Calculate GST
   const calculateGST = (subtotal: number) => {
-    const gstRate = businessSettings?.enableGST ? businessSettings.gstRate : 0
-    const gstAmount = subtotal * gstRate
-    const cgst = gstAmount / 2
-    const sgst = gstAmount / 2
-    const totalAmount = subtotal + gstAmount
+    const gstRate = businessSettings?.enableGST ? businessSettings.gstRate : 0;
+    const gstAmount = subtotal * gstRate;
+    const cgst = gstAmount / 2;
+    const sgst = gstAmount / 2;
+    const totalAmount = subtotal + gstAmount;
 
     return {
       subtotal,
       cgst,
       sgst,
       totalGST: gstAmount,
-      totalAmount
-    }
-  }
+      totalAmount,
+    };
+  };
 
-  const cartGST = calculateGST(getCartTotal())
+  const cartGST = calculateGST(getCartTotal());
 
   const handleAddToCart = (menuItem: any) => {
     addToCart({
       id: `cart-${Date.now()}`,
-      orderId: '',
+      orderId: "",
       menuItemId: menuItem.id,
       quantity: 1,
       price: menuItem.price,
-      notes: '',
-      menuItem
-    })
-  }
+      notes: "",
+      menuItem,
+    });
+  };
 
   const handleUpdateQuantity = (itemId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      removeFromCart(itemId)
+      removeFromCart(itemId);
     } else {
-      updateCartItem(itemId, { quantity: newQuantity })
+      updateCartItem(itemId, { quantity: newQuantity });
     }
-  }
+  };
 
   const handleCreateCustomer = async () => {
     if (!newCustomerName.trim() || !newCustomerPhone.trim()) {
-      setError('Customer name and phone are required')
-      return
+      setError("Customer name and phone are required");
+      return;
     }
 
     try {
       const customerData = {
         name: newCustomerName.trim(),
         phone: newCustomerPhone.trim(),
-        email: '',
-        address: '',
-        restaurantId: selectedRestaurant
-      }
+        email: "",
+        address: "",
+        restaurantId: selectedRestaurant,
+      };
 
-      const newCustomer = await createCustomerMutation.mutateAsync(customerData)
-      setSelectedCustomer(newCustomer.data.id)
-      setNewCustomerName('')
-      setNewCustomerPhone('')
-      setShowAddCustomer(false)
-      clearError()
+      const newCustomer = await createCustomerMutation.mutateAsync(
+        customerData
+      );
+      setSelectedCustomer(newCustomer.data.id);
+      setNewCustomerName("");
+      setNewCustomerPhone("");
+      setShowAddCustomer(false);
+      clearError();
     } catch (error) {
-      setError('Failed to create customer')
+      setError("Failed to create customer");
     }
-  }
+  };
 
   const handleCompleteOrder = async () => {
     try {
       if (cart.length === 0) {
-        setError('Please add items to the order')
-        return
+        setError("Please add items to the order");
+        return;
       }
 
       // Get staff ID (demo)
-      const staffId = 'eca71220-9e3b-4d60-81dc-372a8c780912'
+      const staffId = "eca71220-9e3b-4d60-81dc-372a8c780912";
 
       const orderData = {
         orderType,
@@ -252,59 +286,58 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
         tableId: selectedTable || null,
         staffId,
         restaurantId: selectedRestaurant,
-        orderItems: cart.map(item => ({
+        orderItems: cart.map((item) => ({
           menuItemId: item.menuItemId,
           quantity: item.quantity,
           price: item.price,
-          notes: item.notes
+          notes: item.notes,
         })),
-        notes: notes || '',
-        appointmentDate: orderType === 'APPOINTMENT' ? appointmentDate : null,
+        notes: notes || "",
+        appointmentDate: orderType === "APPOINTMENT" ? appointmentDate : null,
         serviceType: serviceType || null,
-        customFields: JSON.stringify(customFields)
-      }
+        customFields: JSON.stringify(customFields),
+      };
 
-      const order = await createOrderMutation.mutateAsync(orderData)
-      
+      const order = await createOrderMutation.mutateAsync(orderData);
+
       // Process payment to complete the order
       const paymentData = {
         orderId: order.data.id,
         amount: order.data.totalAmount,
-        method: 'CASH', // Default to cash for completion
-        transactionId: '',
-        notes: 'Order completed'
-      }
+        method: "CASH", // Default to cash for completion
+        transactionId: "",
+        notes: "Order completed",
+      };
 
-      await createPaymentMutation.mutateAsync(paymentData)
-      
+      await createPaymentMutation.mutateAsync(paymentData);
+
       // Show success and print receipt
-      await printReceipt(order.data)
-      
-      clearCart()
-      setOrderType('')
-      setSelectedTable('')
-      setSelectedCustomer('')
-      setNotes('')
-      setSearchTerm('')
-      setSelectedCategory('')
-      setServiceType('')
-      setCustomFields({})
-      onOpenChange(false)
-      
+      await printReceipt(order.data);
+
+      clearCart();
+      setOrderType("");
+      setSelectedTable("");
+      setSelectedCustomer("");
+      setNotes("");
+      setSearchTerm("");
+      setSelectedCategory("");
+      setServiceType("");
+      setCustomFields({});
+      onOpenChange(false);
     } catch (error) {
-      setError('Failed to complete order')
+      setError("Failed to complete order");
     }
-  }
+  };
 
   const handleCreateOrder = async () => {
     try {
       if (cart.length === 0) {
-        setError('Please add items to the order')
-        return
+        setError("Please add items to the order");
+        return;
       }
 
       // Get staff ID (demo)
-      const staffId = 'eca71220-9e3b-4d60-81dc-372a8c780912'
+      const staffId = "eca71220-9e3b-4d60-81dc-372a8c780912";
 
       const orderData = {
         orderType,
@@ -312,47 +345,48 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
         tableId: selectedTable || null,
         staffId,
         restaurantId: selectedRestaurant,
-        orderItems: cart.map(item => ({
+        orderItems: cart.map((item) => ({
           menuItemId: item.menuItemId,
           quantity: item.quantity,
           price: item.price,
-          notes: item.notes
+          notes: item.notes,
         })),
-        notes: notes || '',
-        appointmentDate: orderType === 'APPOINTMENT' ? appointmentDate : null,
+        notes: notes || "",
+        appointmentDate: orderType === "APPOINTMENT" ? appointmentDate : null,
         serviceType: serviceType || null,
-        customFields: JSON.stringify(customFields)
-      }
+        customFields: JSON.stringify(customFields),
+      };
 
-      const order = await createOrderMutation.mutateAsync(orderData)
-      
+      const order = await createOrderMutation.mutateAsync(orderData);
+
       // Show success and print receipt
-      await printReceipt(order.data)
-      
-      clearCart()
-      setOrderType('')
-      setSelectedTable('')
-      setSelectedCustomer('')
-      setNotes('')
-      setSearchTerm('')
-      setSelectedCategory('')
-      setServiceType('')
-      setCustomFields({})
-      onOpenChange(false)
-      
+      await printReceipt(order.data);
+
+      clearCart();
+      setOrderType("");
+      setSelectedTable("");
+      setSelectedCustomer("");
+      setNotes("");
+      setSearchTerm("");
+      setSelectedCategory("");
+      setServiceType("");
+      setCustomFields({});
+      onOpenChange(false);
     } catch (error) {
-      setError('Failed to create order')
+      setError("Failed to create order");
     }
-  }
+  };
 
   const printReceipt = async (order: any) => {
     // Create a new window for printing
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) return
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
 
-    const businessName = businessSettings?.businessType || 'Business'
-    const receiptHeader = businessSettings?.receiptHeader || `${businessName} Receipt`
-    const receiptFooter = businessSettings?.receiptFooter || 'Thank you for your business!'
+    const businessName = businessSettings?.businessType || "Business";
+    const receiptHeader =
+      businessSettings?.receiptHeader || `${businessName} Receipt`;
+    const receiptFooter =
+      businessSettings?.receiptFooter || "Thank you for your business!";
 
     const receiptHTML = `
       <!DOCTYPE html>
@@ -383,20 +417,31 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
           <div class="header">
             <div class="title">${receiptHeader}</div>
             <div class="subtitle">Order #${order.orderNumber}</div>
-            <div class="subtitle">${new Date(order.createdAt).toLocaleString()}</div>
-            <div class="subtitle">Type: ${order.orderType.replace('_', ' ')}</div>
+            <div class="subtitle">${new Date(
+              order.createdAt
+            ).toLocaleString()}</div>
+            <div class="subtitle">Type: ${order.orderType.replace(
+              "_",
+              " "
+            )}</div>
           </div>
           
           <div class="divider"></div>
           
           <div style="font-weight: bold; margin-bottom: 10px;">ORDER ITEMS</div>
-          ${order.orderItems.map((item: any) => `
+          ${order.orderItems
+            .map(
+              (item: any) => `
             <div class="item">
               <span class="item-name">${item.menuItem.name}</span>
               <span class="item-qty">${item.quantity}</span>
-              <span class="item-price">₹${(item.price * item.quantity).toFixed(2)}</span>
+              <span class="item-price">₹${(item.price * item.quantity).toFixed(
+                2
+              )}</span>
             </div>
-          `).join('')}
+          `
+            )
+            .join("")}
           
           <div class="divider"></div>
           
@@ -404,16 +449,24 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
             <span class="item-name">Subtotal</span>
             <span class="item-price">₹${order.subtotal.toFixed(2)}</span>
           </div>
-          ${businessSettings?.enableGST ? `
+          ${
+            businessSettings?.enableGST
+              ? `
           <div class="item">
-            <span class="item-name">CGST (${(businessSettings.gstRate * 50).toFixed(1)}%)</span>
+            <span class="item-name">CGST (${(
+              businessSettings.gstRate * 50
+            ).toFixed(1)}%)</span>
             <span class="item-price">₹${(order.gstAmount / 2).toFixed(2)}</span>
           </div>
           <div class="item">
-            <span class="item-name">SGST (${(businessSettings.gstRate * 50).toFixed(1)}%)</span>
+            <span class="item-name">SGST (${(
+              businessSettings.gstRate * 50
+            ).toFixed(1)}%)</span>
             <span class="item-price">₹${(order.gstAmount / 2).toFixed(2)}</span>
           </div>
-          ` : ''}
+          `
+              : ""
+          }
           <div class="item total">
             <span class="item-name">TOTAL</span>
             <span class="item-price">₹${order.totalAmount.toFixed(2)}</span>
@@ -430,19 +483,19 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
           </div>
         </body>
       </html>
-    `
+    `;
 
-    printWindow.document.write(receiptHTML)
-    printWindow.document.close()
-    printWindow.print()
-    printWindow.close()
-  }
+    printWindow.document.write(receiptHTML);
+    printWindow.document.close();
+    printWindow.print();
+    printWindow.close();
+  };
 
   const renderBusinessSpecificFields = () => {
-    if (!businessSettings?.businessType) return null
+    if (!businessSettings?.businessType) return null;
 
     switch (businessSettings.businessType) {
-      case 'RESTAURANT':
+      case "RESTAURANT":
         return (
           <div className="space-y-2 mb-4">
             <Label className="text-sm font-medium">Table</Label>
@@ -459,15 +512,20 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
               </SelectContent>
             </Select>
             <Input
-              value={customFields.specialInstructions || ''}
-              onChange={(e) => setCustomFields(prev => ({ ...prev, specialInstructions: e.target.value }))}
+              value={customFields.specialInstructions || ""}
+              onChange={(e) =>
+                setCustomFields((prev) => ({
+                  ...prev,
+                  specialInstructions: e.target.value,
+                }))
+              }
               placeholder="Special instructions"
               className="h-8"
             />
           </div>
-        )
-      case 'SALON':
-      case 'SPA':
+        );
+      case "SALON":
+      case "SPA":
         return (
           <div className="space-y-2 mb-4">
             <Label className="text-sm font-medium">Appointment Date</Label>
@@ -478,13 +536,19 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
               className="h-8"
             />
             <Input
-              value={customFields.stylist || customFields.therapist || ''}
-              onChange={(e) => setCustomFields(prev => ({ 
-                ...prev, 
-                stylist: e.target.value,
-                therapist: e.target.value
-              }))}
-              placeholder={businessSettings.businessType === 'SALON' ? 'Stylist' : 'Therapist'}
+              value={customFields.stylist || customFields.therapist || ""}
+              onChange={(e) =>
+                setCustomFields((prev) => ({
+                  ...prev,
+                  stylist: e.target.value,
+                  therapist: e.target.value,
+                }))
+              }
+              placeholder={
+                businessSettings.businessType === "SALON"
+                  ? "Stylist"
+                  : "Therapist"
+              }
               className="h-8"
             />
             <Input
@@ -494,30 +558,45 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
               className="h-8"
             />
           </div>
-        )
-      case 'PHARMACY':
+        );
+      case "PHARMACY":
         return (
           <div className="space-y-2 mb-4">
             <Input
-              value={customFields.prescriptionNumber || ''}
-              onChange={(e) => setCustomFields(prev => ({ ...prev, prescriptionNumber: e.target.value }))}
+              value={customFields.prescriptionNumber || ""}
+              onChange={(e) =>
+                setCustomFields((prev) => ({
+                  ...prev,
+                  prescriptionNumber: e.target.value,
+                }))
+              }
               placeholder="Prescription number"
               className="h-8"
             />
             <Input
-              value={customFields.doctorName || ''}
-              onChange={(e) => setCustomFields(prev => ({ ...prev, doctorName: e.target.value }))}
+              value={customFields.doctorName || ""}
+              onChange={(e) =>
+                setCustomFields((prev) => ({
+                  ...prev,
+                  doctorName: e.target.value,
+                }))
+              }
               placeholder="Doctor name"
               className="h-8"
             />
           </div>
-        )
-      case 'GYM':
+        );
+      case "GYM":
         return (
           <div className="space-y-2 mb-4">
             <Input
-              value={customFields.trainer || ''}
-              onChange={(e) => setCustomFields(prev => ({ ...prev, trainer: e.target.value }))}
+              value={customFields.trainer || ""}
+              onChange={(e) =>
+                setCustomFields((prev) => ({
+                  ...prev,
+                  trainer: e.target.value,
+                }))
+              }
               placeholder="Trainer"
               className="h-8"
             />
@@ -532,43 +611,52 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
               </SelectContent>
             </Select>
           </div>
-        )
-      case 'CLINIC':
+        );
+      case "CLINIC":
         return (
           <div className="space-y-2 mb-4">
             <Input
-              value={customFields.doctor || ''}
-              onChange={(e) => setCustomFields(prev => ({ ...prev, doctor: e.target.value }))}
+              value={customFields.doctor || ""}
+              onChange={(e) =>
+                setCustomFields((prev) => ({ ...prev, doctor: e.target.value }))
+              }
               placeholder="Doctor"
               className="h-8"
             />
             <Textarea
-              value={customFields.symptoms || ''}
-              onChange={(e) => setCustomFields(prev => ({ ...prev, symptoms: e.target.value }))}
+              value={customFields.symptoms || ""}
+              onChange={(e) =>
+                setCustomFields((prev) => ({
+                  ...prev,
+                  symptoms: e.target.value,
+                }))
+              }
               placeholder="Symptoms/Reason for visit"
               className="h-8"
             />
           </div>
-        )
+        );
       default:
-        return null
+        return null;
     }
-  }
+  };
 
-  const availableOrderTypes = businessSettings?.businessType ? 
-    businessTypeOrderTypes[businessSettings.businessType as keyof typeof businessTypeOrderTypes] : 
-    ['DINE_IN', 'TAKEAWAY', 'DELIVERY']
+  const availableOrderTypes = businessSettings?.businessType
+    ? businessTypeOrderTypes[
+        businessSettings.businessType as keyof typeof businessTypeOrderTypes
+      ]
+    : ["DINE_IN", "TAKEAWAY", "DELIVERY"];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] w-[95vw] h-[95vh] p-0">
+      <DialogContent className="max-w-full max-h-[95vh] w-full h-[95vh] p-0">
         <div className="flex h-full w-full">
           {/* Left Panel - Order Details */}
-          <div className="w-96 bg-gray-50 border-r p-4 flex flex-col">
+          <div className="w-full bg-gray-50 border-r p-4 flex flex-col">
             <DialogHeader className="pb-4">
               <DialogTitle className="text-lg flex items-center gap-2">
                 <BusinessIcon className="h-5 w-5" />
-                New Order - {businessSettings?.businessType?.replace('_', ' ')}
+                New Order - {businessSettings?.businessType?.replace("_", " ")}
               </DialogTitle>
             </DialogHeader>
 
@@ -579,12 +667,12 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
                 {availableOrderTypes.map((type) => (
                   <Button
                     key={type}
-                    variant={orderType === type ? 'default' : 'outline'}
+                    variant={orderType === type ? "default" : "outline"}
                     size="sm"
                     onClick={() => setOrderType(type)}
                     className="h-16 p-2"
                   >
-                    <span className="text-xs">{type.replace('_', ' ')}</span>
+                    <span className="text-xs">{type.replace("_", " ")}</span>
                   </Button>
                 ))}
               </div>
@@ -603,10 +691,10 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
                   onClick={() => setShowAddCustomer(!showAddCustomer)}
                   className="h-6 px-2 text-xs"
                 >
-                  {showAddCustomer ? 'Cancel' : 'Add New'}
+                  {showAddCustomer ? "Cancel" : "Add New"}
                 </Button>
               </div>
-              
+
               {showAddCustomer ? (
                 <div className="space-y-2 p-3 bg-gray-50 rounded border">
                   <Input
@@ -623,7 +711,9 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
                   />
                   <Button
                     onClick={handleCreateCustomer}
-                    disabled={!newCustomerName.trim() || !newCustomerPhone.trim()}
+                    disabled={
+                      !newCustomerName.trim() || !newCustomerPhone.trim()
+                    }
                     className="w-full h-8"
                     size="sm"
                   >
@@ -631,7 +721,10 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
                   </Button>
                 </div>
               ) : (
-                <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+                <Select
+                  value={selectedCustomer}
+                  onValueChange={setSelectedCustomer}
+                >
                   <SelectTrigger className="h-8">
                     <SelectValue placeholder="Select customer" />
                   </SelectTrigger>
@@ -661,7 +754,9 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
             <div className="flex-1 overflow-hidden">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <Label className="text-sm font-medium">Order Items ({cart.length})</Label>
+                  <Label className="text-sm font-medium">
+                    Order Items ({cart.length})
+                  </Label>
                   {cart.length > 0 && (
                     <Button
                       variant="ghost"
@@ -673,28 +768,41 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
                     </Button>
                   )}
                 </div>
-                
+
                 <div className="space-y-1 max-h-40 overflow-y-auto">
                   {cart.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-2 bg-white rounded border">
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-2 bg-white rounded border"
+                    >
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{item.menuItem?.name}</div>
-                        <div className="text-xs text-gray-500">₹{item.price}</div>
+                        <div className="text-sm font-medium truncate">
+                          {item.menuItem?.name}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          ₹{item.price}
+                        </div>
                       </div>
                       <div className="flex items-center gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                          onClick={() =>
+                            handleUpdateQuantity(item.id, item.quantity - 1)
+                          }
                           className="h-6 w-6 p-0"
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
-                        <span className="text-sm w-6 text-center">{item.quantity}</span>
+                        <span className="text-sm w-6 text-center">
+                          {item.quantity}
+                        </span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                          onClick={() =>
+                            handleUpdateQuantity(item.id, item.quantity + 1)
+                          }
                           className="h-6 w-6 p-0"
                         >
                           <Plus className="h-3 w-3" />
@@ -722,11 +830,15 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
                 {businessSettings?.enableGST && (
                   <>
                     <div className="flex justify-between text-sm">
-                      <span>CGST ({(businessSettings.gstRate * 50).toFixed(1)}%):</span>
+                      <span>
+                        CGST ({(businessSettings.gstRate * 50).toFixed(1)}%):
+                      </span>
                       <span>₹{cartGST.cgst.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>SGST ({(businessSettings.gstRate * 50).toFixed(1)}%):</span>
+                      <span>
+                        SGST ({(businessSettings.gstRate * 50).toFixed(1)}%):
+                      </span>
                       <span>₹{cartGST.sgst.toFixed(2)}</span>
                     </div>
                   </>
@@ -782,7 +894,10 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
                     className="h-8"
                   />
                 </div>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <Select
+                  value={selectedCategory}
+                  onValueChange={setSelectedCategory}
+                >
                   <SelectTrigger className="w-48 h-8">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
@@ -801,24 +916,26 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
             <div className="flex-1 overflow-y-auto p-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredMenuItems.map((item) => (
-                  <Card 
-                    key={item.id} 
+                  <Card
+                    key={item.id}
                     className="cursor-pointer hover:shadow-md transition-shadow"
                     onClick={() => handleAddToCart(item)}
                   >
                     <CardContent className="p-4">
                       <div className="text-center">
-                        <div className="font-medium text-sm mb-2">{item.name}</div>
+                        <div className="font-medium text-sm mb-2">
+                          {item.name}
+                        </div>
                         <div className="text-xs text-gray-600 mb-2 line-clamp-2">
                           {item.description}
                         </div>
                         <div className="font-bold text-lg">₹{item.price}</div>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           className="mt-2 w-full"
                           onClick={(e) => {
-                            e.stopPropagation()
-                            handleAddToCart(item)
+                            e.stopPropagation();
+                            handleAddToCart(item);
                           }}
                         >
                           <Plus className="h-3 w-3 mr-1" />
@@ -834,5 +951,5 @@ export default function MultipurposeOrderDialog({ open, onOpenChange }: Multipur
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

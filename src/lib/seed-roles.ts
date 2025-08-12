@@ -1,316 +1,621 @@
-import { db } from './db'
-import { RoleLevel, Module, PermissionAction } from '@prisma/client'
+import { db } from "../src/lib/db";
+import { v4 as uuidv4 } from "uuid";
+import bcrypt from "bcryptjs";
 
-interface PermissionDefinition {
-  name: string
-  description: string
-  module: Module
-  action: PermissionAction
-  resource?: string
-}
-
-interface RoleDefinition {
-  name: string
-  description: string
-  level: RoleLevel
-  permissions: string[]
-  isSystem?: boolean
-}
-
-// Define all system permissions
-const systemPermissions: PermissionDefinition[] = [
-  // Dashboard permissions
-  { name: 'dashboard:read', description: 'View dashboard', module: Module.DASHBOARD, action: PermissionAction.READ },
-  
-  // Orders permissions
-  { name: 'orders:read', description: 'View orders', module: Module.ORDERS, action: PermissionAction.READ },
-  { name: 'orders:create', description: 'Create orders', module: Module.ORDERS, action: PermissionAction.CREATE },
-  { name: 'orders:update', description: 'Update orders', module: Module.ORDERS, action: PermissionAction.UPDATE },
-  { name: 'orders:delete', description: 'Delete orders', module: Module.ORDERS, action: PermissionAction.DELETE },
-  { name: 'orders:manage', description: 'Manage orders (full access)', module: Module.ORDERS, action: PermissionAction.MANAGE },
-  { name: 'orders:approve', description: 'Approve orders', module: Module.ORDERS, action: PermissionAction.APPROVE },
-  { name: 'orders:reject', description: 'Reject orders', module: Module.ORDERS, action: PermissionAction.REJECT },
-  
-  // Menu permissions
-  { name: 'menu:read', description: 'View menu items', module: Module.MENU, action: PermissionAction.READ },
-  { name: 'menu:create', description: 'Create menu items', module: Module.MENU, action: PermissionAction.CREATE },
-  { name: 'menu:update', description: 'Update menu items', module: Module.MENU, action: PermissionAction.UPDATE },
-  { name: 'menu:delete', description: 'Delete menu items', module: Module.MENU, action: PermissionAction.DELETE },
-  { name: 'menu:manage', description: 'Manage menu (full access)', module: Module.MENU, action: PermissionAction.MANAGE },
-  
-  // Inventory permissions
-  { name: 'inventory:read', description: 'View inventory', module: Module.INVENTORY, action: PermissionAction.READ },
-  { name: 'inventory:create', description: 'Create inventory items', module: Module.INVENTORY, action: PermissionAction.CREATE },
-  { name: 'inventory:update', description: 'Update inventory items', module: Module.INVENTORY, action: PermissionAction.UPDATE },
-  { name: 'inventory:delete', description: 'Delete inventory items', module: Module.INVENTORY, action: PermissionAction.DELETE },
-  { name: 'inventory:manage', description: 'Manage inventory (full access)', module: Module.INVENTORY, action: PermissionAction.MANAGE },
-  
-  // Customers permissions
-  { name: 'customers:read', description: 'View customers', module: Module.CUSTOMERS, action: PermissionAction.READ },
-  { name: 'customers:create', description: 'Create customers', module: Module.CUSTOMERS, action: PermissionAction.CREATE },
-  { name: 'customers:update', description: 'Update customers', module: Module.CUSTOMERS, action: PermissionAction.UPDATE },
-  { name: 'customers:delete', description: 'Delete customers', module: Module.CUSTOMERS, action: PermissionAction.DELETE },
-  { name: 'customers:manage', description: 'Manage customers (full access)', module: Module.CUSTOMERS, action: PermissionAction.MANAGE },
-  
-  // Staff permissions
-  { name: 'staff:read', description: 'View staff members', module: Module.STAFF, action: PermissionAction.READ },
-  { name: 'staff:create', description: 'Create staff members', module: Module.STAFF, action: PermissionAction.CREATE },
-  { name: 'staff:update', description: 'Update staff members', module: Module.STAFF, action: PermissionAction.UPDATE },
-  { name: 'staff:delete', description: 'Delete staff members', module: Module.STAFF, action: PermissionAction.DELETE },
-  { name: 'staff:manage', description: 'Manage staff (full access)', module: Module.STAFF, action: PermissionAction.MANAGE },
-  
-  // Reports permissions
-  { name: 'reports:read', description: 'View reports', module: Module.REPORTS, action: PermissionAction.READ },
-  { name: 'reports:export', description: 'Export reports', module: Module.REPORTS, action: PermissionAction.EXPORT },
-  { name: 'reports:import', description: 'Import report data', module: Module.REPORTS, action: PermissionAction.IMPORT },
-  
-  // Settings permissions
-  { name: 'settings:read', description: 'View settings', module: Module.SETTINGS, action: PermissionAction.READ },
-  { name: 'settings:update', description: 'Update settings', module: Module.SETTINGS, action: PermissionAction.UPDATE },
-  { name: 'settings:manage', description: 'Manage settings (full access)', module: Module.SETTINGS, action: PermissionAction.MANAGE },
-  
-  // Payments permissions
-  { name: 'payments:read', description: 'View payments', module: Module.PAYMENTS, action: PermissionAction.READ },
-  { name: 'payments:create', description: 'Create payments', module: Module.PAYMENTS, action: PermissionAction.CREATE },
-  { name: 'payments:update', description: 'Update payments', module: Module.PAYMENTS, action: PermissionAction.UPDATE },
-  { name: 'payments:delete', description: 'Delete payments', module: Module.PAYMENTS, action: PermissionAction.DELETE },
-  { name: 'payments:manage', description: 'Manage payments (full access)', module: Module.PAYMENTS, action: PermissionAction.MANAGE },
-  
-  // Tables permissions
-  { name: 'tables:read', description: 'View tables', module: Module.TABLES, action: PermissionAction.READ },
-  { name: 'tables:create', description: 'Create tables', module: Module.TABLES, action: PermissionAction.CREATE },
-  { name: 'tables:update', description: 'Update tables', module: Module.TABLES, action: PermissionAction.UPDATE },
-  { name: 'tables:delete', description: 'Delete tables', module: Module.TABLES, action: PermissionAction.DELETE },
-  { name: 'tables:manage', description: 'Manage tables (full access)', module: Module.TABLES, action: PermissionAction.MANAGE },
-  
-  // Outlets permissions
-  { name: 'outlets:read', description: 'View outlets', module: Module.OUTLETS, action: PermissionAction.READ },
-  { name: 'outlets:create', description: 'Create outlets', module: Module.OUTLETS, action: PermissionAction.CREATE },
-  { name: 'outlets:update', description: 'Update outlets', module: Module.OUTLETS, action: PermissionAction.UPDATE },
-  { name: 'outlets:delete', description: 'Delete outlets', module: Module.OUTLETS, action: PermissionAction.DELETE },
-  { name: 'outlets:manage', description: 'Manage outlets (full access)', module: Module.OUTLETS, action: PermissionAction.MANAGE },
-  
-  // Subscriptions permissions
-  { name: 'subscriptions:read', description: 'View subscriptions', module: Module.SUBSCRIPTIONS, action: PermissionAction.READ },
-  { name: 'subscriptions:manage', description: 'Manage subscriptions', module: Module.SUBSCRIPTIONS, action: PermissionAction.MANAGE },
-  
-  // Audit logs permissions
-  { name: 'audit_logs:read', description: 'View audit logs', module: Module.AUDIT_LOGS, action: PermissionAction.READ },
-  { name: 'audit_logs:export', description: 'Export audit logs', module: Module.AUDIT_LOGS, action: PermissionAction.EXPORT },
-  
-  // AI suggestions permissions
-  { name: 'ai_suggestions:read', description: 'View AI suggestions', module: Module.AI_SUGGESTIONS, action: PermissionAction.READ },
-  { name: 'ai_suggestions:manage', description: 'Manage AI suggestions', module: Module.AI_SUGGESTIONS, action: PermissionAction.MANAGE },
-  
-  // Discounts permissions
-  { name: 'discounts:read', description: 'View discounts', module: Module.DISCOUNTS, action: PermissionAction.READ },
-  { name: 'discounts:create', description: 'Create discounts', module: Module.DISCOUNTS, action: PermissionAction.CREATE },
-  { name: 'discounts:update', description: 'Update discounts', module: Module.DISCOUNTS, action: PermissionAction.UPDATE },
-  { name: 'discounts:delete', description: 'Delete discounts', module: Module.DISCOUNTS, action: PermissionAction.DELETE },
-  { name: 'discounts:manage', description: 'Manage discounts (full access)', module: Module.DISCOUNTS, action: PermissionAction.MANAGE },
-  
-  // Loyalty permissions
-  { name: 'loyalty:read', description: 'View loyalty program', module: Module.LOYALTY, action: PermissionAction.READ },
-  { name: 'loyalty:manage', description: 'Manage loyalty program', module: Module.LOYALTY, action: PermissionAction.MANAGE },
-  
-  // POS Customization permissions
-  { name: 'pos_customization:read', description: 'View POS layouts', module: Module.POS_CUSTOMIZATION, action: PermissionAction.READ },
-  { name: 'pos_customization:edit', description: 'Edit POS layouts', module: Module.POS_CUSTOMIZATION, action: PermissionAction.EDIT },
-  { name: 'pos_customization:manage', description: 'Manage POS layouts (full access)', module: Module.POS_CUSTOMIZATION, action: PermissionAction.MANAGE },
-]
-
-// Define system roles
-const systemRoles: RoleDefinition[] = [
-  {
-    name: 'Super Admin',
-    description: 'Super administrator with full system access',
-    level: RoleLevel.SUPER_ADMIN,
-    permissions: [], // Super admin has all permissions by default
-    isSystem: true
-  },
-  {
-    name: 'Store Admin',
-    description: 'Store administrator with full access to restaurant operations',
-    level: RoleLevel.STORE_ADMIN,
-    permissions: [
-      'dashboard:read',
-      'orders:read', 'orders:create', 'orders:update', 'orders:delete', 'orders:manage', 'orders:approve', 'orders:reject',
-      'menu:read', 'menu:create', 'menu:update', 'menu:delete', 'menu:manage',
-      'inventory:read', 'inventory:create', 'inventory:update', 'inventory:delete', 'inventory:manage',
-      'customers:read', 'customers:create', 'customers:update', 'customers:delete', 'customers:manage',
-      'staff:read', 'staff:create', 'staff:update', 'staff:delete', 'staff:manage',
-      'reports:read', 'reports:export',
-      'settings:read', 'settings:update', 'settings:manage',
-      'payments:read', 'payments:create', 'payments:update', 'payments:delete', 'payments:manage',
-      'tables:read', 'tables:create', 'tables:update', 'tables:delete', 'tables:manage',
-      'outlets:read', 'outlets:create', 'outlets:update', 'outlets:delete', 'outlets:manage',
-      'subscriptions:read', 'subscriptions:manage',
-      'audit_logs:read', 'audit_logs:export',
-      'ai_suggestions:read', 'ai_suggestions:manage',
-      'discounts:read', 'discounts:create', 'discounts:update', 'discounts:delete', 'discounts:manage',
-      'loyalty:read', 'loyalty:manage',
-    ],
-    isSystem: true
-  },
-  {
-    name: 'Store Staff',
-    description: 'Store staff with limited access to daily operations',
-    level: RoleLevel.STORE_STAFF,
-    permissions: [
-      'dashboard:read',
-      'orders:read', 'orders:create', 'orders:update',
-      'menu:read',
-      'inventory:read',
-      'customers:read', 'customers:create', 'customers:update',
-      'staff:read',
-      'reports:read',
-      'settings:read',
-      'payments:read', 'payments:create',
-      'tables:read',
-      'outlets:read',
-      'ai_suggestions:read',
-      'discounts:read',
-      'loyalty:read',
-    ],
-    isSystem: true
-  }
-]
-
-export async function seedRolesAndPermissions() {
+async function seedDummyUsers() {
   try {
-    console.log('Seeding roles and permissions...')
+    console.log("Seeding dummy users...");
 
-    // Create a system user for system restaurant
-    let systemUser = await db.user.findFirst({
-      where: { email: 'system@restaurant.com' }
-    })
+    // Hash passwords
+    const ownerPassword = await bcrypt.hash("owner123", 12);
+    const managerPassword = await bcrypt.hash("manager123", 12);
+    const cashierPassword = await bcrypt.hash("cashier123", 12);
+    const kitchenPassword = await bcrypt.hash("kitchen123", 12);
+    const waiterPassword = await bcrypt.hash("waiter123", 12);
+    const demoPassword = await bcrypt.hash("demo123", 12);
 
-    if (!systemUser) {
-      systemUser = await db.user.create({
+    // Create or get Spice Business
+    let spiceBusiness = await db.restaurant.findFirst({
+      where: { name: "Spice Business" },
+    });
+
+    if (!spiceBusiness) {
+      // Create or get owner user first
+      let ownerUser = await db.user.findUnique({
+        where: { email: "owner@spicegarden.com" },
+      });
+
+      if (!ownerUser) {
+        ownerUser = await db.user.create({
+          data: {
+            id: uuidv4(),
+            name: "Business Owner",
+            email: "owner@spicegarden.com",
+            password: ownerPassword,
+            emailVerified: true,
+            isActive: true,
+            role: "OWNER" as any,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // Create Spice Business - Try different businessType values
+      const businessTypeOptions = [
+        "RESTAURANT",
+        "RETAIL",
+        "CAFE",
+        "FOOD_TRUCK",
+        "BAKERY",
+        "BAR",
+      ];
+      let businessCreated = false;
+
+      for (const businessType of businessTypeOptions) {
+        try {
+          spiceBusiness = await db.restaurant.create({
+            data: {
+              id: uuidv4(),
+              name: "Spice Business",
+              address: "123 Main Street, Mumbai, Maharashtra 400001",
+              phone: "+91 22 1234 5678",
+              email: "info@spicebusiness.com",
+              gstNumber: "27ABCDE1234F1Z5",
+              description: "Retail business with modern management",
+              businessType: businessType as any,
+              isActive: true,
+              isVerified: true,
+              ownerId: ownerUser.id,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          });
+          businessCreated = true;
+          console.log(
+            `Created Spice Business with businessType: ${businessType}`
+          );
+          break;
+        } catch (error) {
+          console.log(
+            `Failed to create business with type ${businessType}, trying next...`
+          );
+          continue;
+        }
+      }
+
+      // If all business types fail, try without businessType
+      if (!businessCreated) {
+        try {
+          spiceBusiness = await db.restaurant.create({
+            data: {
+              id: uuidv4(),
+              name: "Spice Business",
+              address: "123 Main Street, Mumbai, Maharashtra 400001",
+              phone: "+91 22 1234 5678",
+              email: "info@spicebusiness.com",
+              gstNumber: "27ABCDE1234F1Z5",
+              description: "Retail business with modern management",
+              // businessType: omitted
+              isActive: true,
+              isVerified: true,
+              ownerId: ownerUser.id,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          });
+          console.log("Created Spice Business without businessType");
+        } catch (error) {
+          console.error(
+            "Failed to create business even without businessType:",
+            error
+          );
+          throw error;
+        }
+      }
+
+      // Create default outlet for Spice Business
+      const spiceOutlet = await db.outlet.create({
         data: {
-          email: 'system@restaurant.com',
-          name: 'System User',
-          isActive: false // Mark as inactive
-        }
-      })
-    }
-
-    // Create a system restaurant for system roles
-    let systemRestaurant = await db.restaurant.findFirst({
-      where: { email: 'system@restaurant.com' }
-    })
-
-    if (!systemRestaurant) {
-      systemRestaurant = await db.restaurant.create({
-        data: {
-          name: 'System Restaurant',
-          email: 'system@restaurant.com',
-          address: 'System Address',
-          phone: '0000000000',
-          ownerId: systemUser.id,
-          isActive: false // Mark as inactive so it doesn't appear in normal operations
-        }
-      })
-    }
-
-    // Create permissions
-    const createdPermissions = []
-    for (const permissionDef of systemPermissions) {
-      const permission = await db.permission.upsert({
-        where: { name: permissionDef.name },
-        update: {},
-        create: {
-          name: permissionDef.name,
-          description: permissionDef.description,
-          module: permissionDef.module,
-          action: permissionDef.action,
-          resource: permissionDef.resource,
-          isSystem: true
-        }
-      })
-      createdPermissions.push(permission)
-    }
-    console.log(`Created ${createdPermissions.length} permissions`)
-
-    // Create roles
-    const createdRoles = []
-    for (const roleDef of systemRoles) {
-      // For system roles, use the system restaurant
-      const role = await db.role.upsert({
-        where: { 
-          name_restaurantId: {
-            name: roleDef.name,
-            restaurantId: systemRestaurant.id
-          }
+          id: uuidv4(),
+          name: "Main Branch",
+          address: "123 Main Street, Mumbai, Maharashtra 400001",
+          phone: "+91 22 1234 5678",
+          isActive: true,
+          restaurantId: spiceBusiness.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
-        update: {},
-        create: {
-          name: roleDef.name,
-          description: roleDef.description,
-          level: roleDef.level,
-          isSystem: roleDef.isSystem || false,
-          restaurantId: systemRestaurant.id
+      });
+
+      // Create owner staff record if it doesn't exist
+      const existingOwnerStaff = await db.staff.findFirst({
+        where: {
+          email: "owner@spicegarden.com",
+          restaurantId: spiceBusiness.id,
+        },
+      });
+
+      if (!existingOwnerStaff) {
+        await db.staff.create({
+          data: {
+            id: uuidv4(),
+            name: "Business Owner",
+            email: "owner@spicegarden.com",
+            phone: "+91 98765 43210",
+            role: "OWNER" as any,
+            password: ownerPassword,
+            isActive: true,
+            isVerified: true,
+            userId: ownerUser.id,
+            restaurantId: spiceBusiness.id,
+            outletId: spiceOutlet.id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // Create or get manager user for Spice Business
+      let managerUser = await db.user.findUnique({
+        where: { email: "manager@spicegarden.com" },
+      });
+
+      if (!managerUser) {
+        managerUser = await db.user.create({
+          data: {
+            id: uuidv4(),
+            name: "Business Manager",
+            email: "manager@spicegarden.com",
+            password: managerPassword,
+            emailVerified: true,
+            isActive: true,
+            role: "MANAGER" as any,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // Create manager staff record if it doesn't exist
+      const existingManagerStaff = await db.staff.findFirst({
+        where: {
+          email: "manager@spicegarden.com",
+          restaurantId: spiceBusiness.id,
+        },
+      });
+
+      if (!existingManagerStaff) {
+        await db.staff.create({
+          data: {
+            id: uuidv4(),
+            name: "Business Manager",
+            email: "manager@spicegarden.com",
+            phone: "+91 98765 43211",
+            role: "MANAGER" as any,
+            password: managerPassword,
+            isActive: true,
+            isVerified: true,
+            userId: managerUser.id,
+            restaurantId: spiceBusiness.id,
+            outletId: spiceOutlet.id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // Create or get cashier user for Spice Business
+      let cashierUser = await db.user.findUnique({
+        where: { email: "cashier@spicegarden.com" },
+      });
+
+      if (!cashierUser) {
+        cashierUser = await db.user.create({
+          data: {
+            id: uuidv4(),
+            name: "Business Cashier",
+            email: "cashier@spicegarden.com",
+            password: cashierPassword,
+            emailVerified: true,
+            isActive: true,
+            role: "CASHIER" as any,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // Create cashier staff record if it doesn't exist
+      const existingCashierStaff = await db.staff.findFirst({
+        where: {
+          email: "cashier@spicegarden.com",
+          restaurantId: spiceBusiness.id,
+        },
+      });
+
+      if (!existingCashierStaff) {
+        await db.staff.create({
+          data: {
+            id: uuidv4(),
+            name: "Business Cashier",
+            email: "cashier@spicegarden.com",
+            phone: "+91 98765 43213",
+            role: "CASHIER" as any,
+            password: cashierPassword,
+            isActive: true,
+            isVerified: true,
+            userId: cashierUser.id,
+            restaurantId: spiceBusiness.id,
+            outletId: spiceOutlet.id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // Create or get operations staff user for Spice Business
+      let operationsUser = await db.user.findUnique({
+        where: { email: "kitchen@spicegarden.com" },
+      });
+
+      if (!operationsUser) {
+        operationsUser = await db.user.create({
+          data: {
+            id: uuidv4(),
+            name: "Operations Staff",
+            email: "kitchen@spicegarden.com",
+            password: kitchenPassword,
+            emailVerified: true,
+            isActive: true,
+            role: "KITCHEN" as any,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // Create operations staff record if it doesn't exist
+      const existingOperationsStaff = await db.staff.findFirst({
+        where: {
+          email: "kitchen@spicegarden.com",
+          restaurantId: spiceBusiness.id,
+        },
+      });
+
+      if (!existingOperationsStaff) {
+        await db.staff.create({
+          data: {
+            id: uuidv4(),
+            name: "Operations Staff",
+            email: "kitchen@spicegarden.com",
+            phone: "+91 98765 43214",
+            role: "KITCHEN" as any,
+            password: kitchenPassword,
+            isActive: true,
+            isVerified: true,
+            userId: operationsUser.id,
+            restaurantId: spiceBusiness.id,
+            outletId: spiceOutlet.id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // Create or get service staff user for Spice Business
+      let serviceUser = await db.user.findUnique({
+        where: { email: "waiter@spicegarden.com" },
+      });
+
+      if (!serviceUser) {
+        serviceUser = await db.user.create({
+          data: {
+            id: uuidv4(),
+            name: "Service Staff",
+            email: "waiter@spicegarden.com",
+            password: waiterPassword,
+            emailVerified: true,
+            isActive: true,
+            role: "WAITER" as any,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // Create service staff record if it doesn't exist
+      const existingServiceStaff = await db.staff.findFirst({
+        where: {
+          email: "waiter@spicegarden.com",
+          restaurantId: spiceBusiness.id,
+        },
+      });
+
+      if (!existingServiceStaff) {
+        await db.staff.create({
+          data: {
+            id: uuidv4(),
+            name: "Service Staff",
+            email: "waiter@spicegarden.com",
+            phone: "+91 98765 43215",
+            role: "WAITER" as any,
+            password: waiterPassword,
+            isActive: true,
+            isVerified: true,
+            userId: serviceUser.id,
+            restaurantId: spiceBusiness.id,
+            outletId: spiceOutlet.id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      console.log(
+        "Created Spice Business with owner, manager, cashier, operations, and service staff"
+      );
+    }
+
+    // Create Demo Business
+    let demoBusiness = await db.restaurant.findFirst({
+      where: { name: "Demo Business" },
+    });
+
+    if (!demoBusiness) {
+      // Create or get demo user
+      let demoUser = await db.user.findUnique({
+        where: { email: "demo@restaurant.com" },
+      });
+
+      if (!demoUser) {
+        demoUser = await db.user.create({
+          data: {
+            id: uuidv4(),
+            name: "Demo User",
+            email: "demo@restaurant.com",
+            password: demoPassword,
+            emailVerified: true,
+            isActive: true,
+            role: "OWNER" as any,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // Create Demo Business - Try different businessType values or omit it
+      let demoBusinessCreated = false;
+      const businessTypeOptions = [
+        "RESTAURANT",
+        "RETAIL",
+        "CAFE",
+        "FOOD_TRUCK",
+        "BAKERY",
+        "BAR",
+      ];
+
+      for (const businessType of businessTypeOptions) {
+        try {
+          demoBusiness = await db.restaurant.create({
+            data: {
+              id: uuidv4(),
+              name: "Demo Business",
+              address: "456 Demo Street, Mumbai, Maharashtra 400002",
+              phone: "+91 22 9876 5432",
+              email: "demo@business.com",
+              gstNumber: "27DEMO1234F1Z5",
+              description: "Demo business for testing and training",
+              businessType: businessType as any,
+              isActive: true,
+              isVerified: true,
+              ownerId: demoUser.id,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          });
+          demoBusinessCreated = true;
+          console.log(
+            `Created Demo Business with businessType: ${businessType}`
+          );
+          break;
+        } catch (error) {
+          console.log(
+            `Failed to create demo business with type ${businessType}, trying next...`
+          );
+          continue;
         }
-      })
-      createdRoles.push(role)
-    }
-    console.log(`Created ${createdRoles.length} roles`)
-
-    // Assign permissions to roles
-    for (const roleDef of systemRoles) {
-      const role = createdRoles.find(r => r.name === roleDef.name)
-      if (!role) continue
-
-      // For Super Admin, we don't need to assign specific permissions
-      // as they have access to everything by default
-      if (roleDef.level === RoleLevel.SUPER_ADMIN) {
-        continue
       }
 
-      // Get permission IDs for this role
-      const permissionIds = createdPermissions
-        .filter(p => roleDef.permissions.includes(p.name))
-        .map(p => p.id)
+      // If all business types fail, try without businessType
+      if (!demoBusinessCreated) {
+        try {
+          demoBusiness = await db.restaurant.create({
+            data: {
+              id: uuidv4(),
+              name: "Demo Business",
+              address: "456 Demo Street, Mumbai, Maharashtra 400002",
+              phone: "+91 22 9876 5432",
+              email: "demo@business.com",
+              gstNumber: "27DEMO1234F1Z5",
+              description: "Demo business for testing and training",
+              // businessType: omitted
+              isActive: true,
+              isVerified: true,
+              ownerId: demoUser.id,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          });
+          console.log("Created Demo Business without businessType");
+        } catch (error) {
+          console.error(
+            "Failed to create demo business even without businessType:",
+            error
+          );
+          throw error;
+        }
+      }
 
-      // Delete existing role permissions
-      await db.rolePermission.deleteMany({
-        where: { roleId: role.id }
-      })
+      // Create default outlet for Demo Business
+      const demoOutlet = await db.outlet.create({
+        data: {
+          id: uuidv4(),
+          name: "Demo Branch",
+          address: "456 Demo Street, Mumbai, Maharashtra 400002",
+          phone: "+91 22 9876 5432",
+          isActive: true,
+          restaurantId: demoBusiness.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
 
-      // Create new role permissions
-      if (permissionIds.length > 0) {
-        await db.rolePermission.createMany({
-          data: permissionIds.map(permissionId => ({
-            roleId: role.id,
-            permissionId
-          }))
-        })
+      // Create demo staff record if it doesn't exist
+      const existingDemoStaff = await db.staff.findFirst({
+        where: {
+          email: "demo@restaurant.com",
+          restaurantId: demoBusiness.id,
+        },
+      });
+
+      if (!existingDemoStaff) {
+        await db.staff.create({
+          data: {
+            id: uuidv4(),
+            name: "Demo User",
+            email: "demo@restaurant.com",
+            phone: "+91 98765 43212",
+            role: "OWNER" as any,
+            password: demoPassword,
+            isActive: true,
+            isVerified: true,
+            userId: demoUser.id,
+            restaurantId: demoBusiness.id,
+            outletId: demoOutlet.id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      console.log("Created Demo Business with demo user");
+    }
+
+    // Create basic categories and menu items for both businesses
+    const businesses = [spiceBusiness, demoBusiness].filter(Boolean);
+
+    for (const business of businesses) {
+      // Check if categories already exist
+      const existingCategories = await db.category.findMany({
+        where: { restaurantId: business.id },
+      });
+
+      if (existingCategories.length === 0) {
+        // Create default categories
+        const categories = await Promise.all([
+          db.category.create({
+            data: {
+              id: uuidv4(),
+              name: "Products",
+              description: "Main products and services",
+              displayOrder: 1,
+              isActive: true,
+              restaurantId: business.id,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          }),
+          db.category.create({
+            data: {
+              id: uuidv4(),
+              name: "Services",
+              description: "Additional services",
+              displayOrder: 2,
+              isActive: true,
+              restaurantId: business.id,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          }),
+          db.category.create({
+            data: {
+              id: uuidv4(),
+              name: "Miscellaneous",
+              description: "Miscellaneous items",
+              displayOrder: 3,
+              isActive: true,
+              restaurantId: business.id,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          }),
+        ]);
+
+        // Create sample menu items
+        await Promise.all([
+          db.menuItem.create({
+            data: {
+              id: uuidv4(),
+              name: "Premium Product",
+              description: "High-quality premium product",
+              price: 250,
+              categoryId: categories[0].id,
+              restaurantId: business.id,
+              isActive: true,
+              isAvailable: true,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          }),
+          db.menuItem.create({
+            data: {
+              id: uuidv4(),
+              name: "Standard Service",
+              description: "Standard service offering",
+              price: 350,
+              categoryId: categories[1].id,
+              restaurantId: business.id,
+              isActive: true,
+              isAvailable: true,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          }),
+          db.menuItem.create({
+            data: {
+              id: uuidv4(),
+              name: "Basic Item",
+              description: "Basic miscellaneous item",
+              price: 30,
+              categoryId: categories[2].id,
+              restaurantId: business.id,
+              isActive: true,
+              isAvailable: true,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          }),
+        ]);
+
+        console.log(`Created categories and menu items for ${business.name}`);
       }
     }
-    console.log('Assigned permissions to roles')
 
-    console.log('Roles and permissions seeded successfully!')
-    return { success: true, message: 'Roles and permissions seeded successfully' }
+    console.log("Dummy users and data seeded successfully!");
+    console.log("\nAvailable credentials:");
+    console.log("Owner: owner@spicegarden.com / owner123");
+    console.log("Manager: manager@spicegarden.com / manager123");
+    console.log("Cashier: cashier@spicegarden.com / cashier123");
+    console.log("Kitchen: kitchen@spicegarden.com / kitchen123");
+    console.log("Waiter: waiter@spicegarden.com / waiter123");
+    console.log("Demo: demo@restaurant.com / demo123");
   } catch (error) {
-    console.error('Error seeding roles and permissions:', error)
-    return { success: false, error: 'Failed to seed roles and permissions' }
+    console.error("Error seeding dummy users:", error);
+    process.exit(1);
+  } finally {
+    await db.$disconnect();
   }
 }
 
-// Run this function directly if this file is executed
-if (require.main === module) {
-  seedRolesAndPermissions()
-    .then(result => {
-      if (result.success) {
-        console.log(result.message)
-        process.exit(0)
-      } else {
-        console.error(result.error)
-        process.exit(1)
-      }
-    })
-    .catch(error => {
-      console.error('Unexpected error:', error)
-      process.exit(1)
-    })
-}
+seedDummyUsers();

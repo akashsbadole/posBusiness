@@ -159,7 +159,7 @@ To remove seeded data, you have two options:
 2. **Manual Deletion** (specific records):
    ```bash
    # Use Prisma Studio or SQL commands
-   npx prisma studio
+  
    ```
 
 ## 🛠 Troubleshooting
